@@ -70,6 +70,9 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
       uBloomThreshold: { value: config.bloomThreshold },
       uQuantization: { value: config.quantization },
       uScanlines: { value: config.scanlines },
+      uRotation: { value: config.rotation },
+      uZoom: { value: config.zoom },
+      uTimeOffset: { value: config.timeOffset },
       tDiffuse: { value: null },
     }),
     []
@@ -114,6 +117,9 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
         config.bloomThreshold;
       materialRef.current.uniforms.uQuantization.value = config.quantization;
       materialRef.current.uniforms.uScanlines.value = config.scanlines;
+      materialRef.current.uniforms.uRotation.value = config.rotation;
+      materialRef.current.uniforms.uZoom.value = config.zoom;
+      materialRef.current.uniforms.uTimeOffset.value = config.timeOffset;
     }
   }, [config]);
 
@@ -291,14 +297,14 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
   }
 
   // Generate Geometry once
-  const particleCount = 2000;
   const geometry = useMemo(() => {
+    const count = config.particleCount;
     const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    const sizes = new Float32Array(particleCount);
-    const randoms = new Float32Array(particleCount);
+    const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
+    const randoms = new Float32Array(count);
 
-    for (let i = 0; i < particleCount; i++) {
+    for (let i = 0; i < count; i++) {
       // Create a box volume for particles from -5 to 5
       positions[i * 3] = (Math.random() - 0.5) * 10;
       positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
@@ -312,7 +318,7 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
     geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
     geo.setAttribute("aRandom", new THREE.BufferAttribute(randoms, 1));
     return geo;
-  }, []);
+  }, [config.particleCount]);
 
   // Shared uniforms structure with ShaderMesh
   const uniforms = useMemo(
@@ -328,6 +334,10 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
       uNoiseScale: { value: config.noiseScale },
       uNoiseOctaves: { value: config.noiseOctaves },
       uNoisePersistence: { value: config.noisePersistence },
+      // Particle specific
+      uParticleSize: { value: config.particleSize },
+      uParticleSpeed: { value: config.particleSpeed },
+      uParticleOpacity: { value: config.particleOpacity },
     }),
     []
   );
@@ -351,6 +361,10 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
       materialRef.current.uniforms.uNoiseOctaves.value = config.noiseOctaves;
       materialRef.current.uniforms.uNoisePersistence.value =
         config.noisePersistence;
+      materialRef.current.uniforms.uParticleSize.value = config.particleSize;
+      materialRef.current.uniforms.uParticleSpeed.value = config.particleSpeed;
+      materialRef.current.uniforms.uParticleOpacity.value =
+        config.particleOpacity;
     }
   }, [config]);
 

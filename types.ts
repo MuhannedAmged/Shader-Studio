@@ -25,6 +25,13 @@ export interface ShaderConfig {
   quantization: number;
   scanlines: number;
   showParticles: boolean;
+  particleSize: number;
+  particleSpeed: number;
+  particleCount: number;
+  particleOpacity: number;
+  rotation: number;
+  zoom: number;
+  timeOffset: number;
   gradientType: GradientType;
 }
 

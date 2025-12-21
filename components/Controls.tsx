@@ -390,6 +390,69 @@ const Controls: React.FC<ControlsProps> = ({
                   <div className="absolute left-1/2 w-0.5 h-3 bg-white/20 -translate-x-1/2 rounded-full pointer-events-none" />
                 </div>
               </div>
+
+              {/* Rotation Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-400">Rotation</span>
+                  <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                    {(config.rotation / Math.PI).toFixed(2)}π
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={Math.PI * 2}
+                  step="0.01"
+                  value={config.rotation}
+                  onChange={(e) =>
+                    handleSliderChange("rotation", parseFloat(e.target.value))
+                  }
+                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                />
+              </div>
+
+              {/* Zoom Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-400">Zoom</span>
+                  <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                    {config.zoom.toFixed(2)}x
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="5.0"
+                  step="0.1"
+                  value={config.zoom}
+                  onChange={(e) =>
+                    handleSliderChange("zoom", parseFloat(e.target.value))
+                  }
+                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                />
+              </div>
+
+              {/* Time Offset Slider */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-400">Time Offset</span>
+                  <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                    {config.timeOffset.toFixed(1)}s
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={config.timeOffset}
+                  onChange={(e) =>
+                    handleSliderChange("timeOffset", parseFloat(e.target.value))
+                  }
+                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                />
+              </div>
             </div>
 
             {/* Colors Section */}
@@ -769,6 +832,106 @@ const Controls: React.FC<ControlsProps> = ({
                   />
                 </button>
               </div>
+
+              {config.showParticles && (
+                <div className="space-y-4 pl-2 border-l border-white/5 animate-fade-in">
+                  {/* Particle Size */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Size</span>
+                      <span className="text-[10px] font-mono text-gray-400">
+                        {config.particleSize.toFixed(1)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.1"
+                      max="5.0"
+                      step="0.1"
+                      value={config.particleSize}
+                      onChange={(e) =>
+                        handleSliderChange(
+                          "particleSize",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                    />
+                  </div>
+
+                  {/* Particle Speed */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Speed</span>
+                      <span className="text-[10px] font-mono text-gray-400">
+                        {config.particleSpeed.toFixed(1)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.0"
+                      max="5.0"
+                      step="0.1"
+                      value={config.particleSpeed}
+                      onChange={(e) =>
+                        handleSliderChange(
+                          "particleSpeed",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                    />
+                  </div>
+
+                  {/* Particle Count */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Count</span>
+                      <span className="text-[10px] font-mono text-gray-400">
+                        {config.particleCount}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="100"
+                      max="5000"
+                      step="100"
+                      value={config.particleCount}
+                      onChange={(e) =>
+                        handleSliderChange(
+                          "particleCount",
+                          parseInt(e.target.value)
+                        )
+                      }
+                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                    />
+                  </div>
+
+                  {/* Particle Opacity */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] text-gray-500">Opacity</span>
+                      <span className="text-[10px] font-mono text-gray-400">
+                        {config.particleOpacity.toFixed(2)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.0"
+                      max="1.0"
+                      step="0.01"
+                      value={config.particleOpacity}
+                      onChange={(e) =>
+                        handleSliderChange(
+                          "particleOpacity",
+                          parseFloat(e.target.value)
+                        )
+                      }
+                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Distortion Section */}
@@ -1320,7 +1483,7 @@ const Controls: React.FC<ControlsProps> = ({
                       : handleDownloadVideo
                   }
                   disabled={isExporting}
-                  className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 mt-2"
+                  className="w-full h-10 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 mt-2"
                 >
                   {isExporting ? (
                     <>

@@ -41,7 +41,20 @@ uniform float uGlow;
 uniform float uBloomThreshold;
 uniform float uQuantization;
 uniform float uScanlines;
+uniform float uRotation;
+uniform float uZoom;
+uniform float uTimeOffset;
 uniform sampler2D tDiffuse;
+
+vec2 transformUV(vec2 uv) {
+    vec2 centered = uv - 0.5;
+    float s = sin(uRotation);
+    float c = cos(uRotation);
+    mat2 rot = mat2(c, -s, s, c);
+    centered = rot * centered;
+    centered /= uZoom;
+    return centered + 0.5;
+}
 
 // Simplex 2D noise
 vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
@@ -170,12 +183,12 @@ export const NOISE_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-  vec2 uv = vUv;
+  vec2 uv = transformUV(vUv);
   if (uPixelation > 0.0) {
     float pixels = 200.0 * (1.1 - uPixelation);
     uv = floor(uv * pixels) / pixels;
   }
-  float time = uTime * uSpeed;
+  float time = (uTime + uTimeOffset) * uSpeed;
   vec2 pos = uv * uDensity;
   
   float pattern = fbm(pos * uNoiseScale + vec2(time * 0.1));
@@ -208,7 +221,7 @@ float domainWarp(vec2 p) {
 }
 
 void main() {
-  vec2 uv = vUv;
+  vec2 uv = transformUV(vUv);
   if (uPixelation > 0.0) {
     float pixels = 200.0 * (1.1 - uPixelation);
     uv = floor(uv * pixels) / pixels;
@@ -230,14 +243,14 @@ export const LINEAR_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-  vec2 uv = vUv;
+  vec2 uv = transformUV(vUv);
   if (uPixelation > 0.0) {
     float pixels = 200.0 * (1.1 - uPixelation);
     uv = floor(uv * pixels) / pixels;
   }
-  float time = uTime * uSpeed * 0.5;
+  float time = (uTime + uTimeOffset) * uSpeed * 0.5;
   
-  // Rotate UV
+  // Rotate UV (Existing logic, but we'll use transformUV as base)
   float s = sin(time * 0.1 + uDensity);
   float c = cos(time * 0.1 + uDensity);
   mat2 rot = mat2(c, -s, s, c);
@@ -258,13 +271,13 @@ export const RADIAL_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-  vec2 uv = vUv;
+  vec2 uv = transformUV(vUv);
   if (uPixelation > 0.0) {
     float pixels = 200.0 * (1.1 - uPixelation);
     uv = floor(uv * pixels) / pixels;
   }
   vec2 center = vec2(0.5, 0.5);
-  float time = uTime * uSpeed;
+  float time = (uTime + uTimeOffset) * uSpeed;
   
   // Moving center
   center += vec2(sin(time * 0.5), cos(time * 0.3)) * 0.1 * uDensity;
@@ -286,12 +299,12 @@ export const MESH_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     vec2 p1 = vec2(0.5 + 0.3 * sin(time * 0.7), 0.5 + 0.3 * cos(time * 0.8));
     vec2 p2 = vec2(0.5 + 0.3 * sin(time * 0.9 + 2.0), 0.5 + 0.3 * cos(time * 0.6 + 1.0));
@@ -313,12 +326,12 @@ export const AURORA_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     vec2 pos = uv * uDensity;
     pos.y += fbm(pos + time * 0.2) * uDistortion;
@@ -338,12 +351,12 @@ export const LIQUID_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     vec2 warp = uv;
     warp.x += sin(uv.y * 10.0 + time) * 0.05 * uWarp;
@@ -362,12 +375,12 @@ export const WAVE_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     float wave = sin(uv.x * uDensity * 5.0 + time) * 0.1 * uStrength;
     wave += sin(uv.y * uDensity * 3.0 - time * 0.5) * 0.05 * uStrength;
@@ -388,12 +401,12 @@ vec3 palette(float t) {
 }
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = (uv - 0.5) * uDensity;
     
     float d = length(p);
@@ -413,12 +426,12 @@ export const CONIC_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv - 0.5;
     
     float angle = atan(p.y, p.x) / 6.28318 + 0.5;
@@ -439,12 +452,12 @@ export const STRIPES_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     float pattern = sin(uv.x * uDensity * 10.0 + time + fbm(uv * uNoiseScale) * uDistortion);
     pattern = smoothstep(-0.1, 0.1, pattern / (0.1 + uSharpness * 0.5));
@@ -461,12 +474,12 @@ export const PLASMA_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = (uv - 0.5) * uDensity * 5.0;
     
     float v = sin(p.x + time);
@@ -494,12 +507,12 @@ vec2 hash2(vec2 p) {
 }
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv * uDensity * 5.0;
     
     vec2 n = floor(p);
@@ -530,12 +543,12 @@ export const METABALLS_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = (uv - 0.5) * uDensity * 2.0;
     
     float m = 0.0;
@@ -558,12 +571,12 @@ export const KALEIDOSCOPE_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv - 0.5;
     
     float r = length(p);
@@ -589,12 +602,12 @@ export const SPIRAL_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv - 0.5;
     
     float r = length(p) * uDensity;
@@ -615,12 +628,12 @@ export const GRID_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv * uDensity * 5.0;
     
     vec2 grid = abs(fract(p - 0.5) - 0.5) / (0.1 + uSharpness * 0.1);
@@ -684,12 +697,12 @@ float star(vec2 uv, float flare) {
 }
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = (uv - 0.5) * uDensity * 5.0;
     
     vec3 color = vec3(0.0);
@@ -715,12 +728,12 @@ export const FLOW_FIELD_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv * uDensity;
     
     for(int i=0; i<3; i++) {
@@ -752,13 +765,13 @@ float map(vec3 p) {
 }
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
     vec2 p = (uv - 0.5) * 2.0;
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     
     vec3 ro = vec3(0.0, 0.0, -5.0 + time);
     vec3 rd = normalize(vec3(p, 1.0));
@@ -793,12 +806,12 @@ export const HALFTONE_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv * uDensity * 10.0;
     
     float n = fbm(uv * uNoiseScale + time * 0.1);
@@ -826,12 +839,12 @@ float hash12(vec2 p) {
 }
 
 void main() {
-    vec2 uv = vUv;
+    vec2 uv = transformUV(vUv);
     if (uPixelation > 0.0) {
         float pixels = 200.0 * (1.1 - uPixelation);
         uv = floor(uv * pixels) / pixels;
     }
-    float time = uTime * uSpeed;
+    float time = (uTime + uTimeOffset) * uSpeed;
     vec2 p = uv * uDensity * 5.0;
     
     vec2 gv = fract(p) - 0.5;
@@ -1000,6 +1013,8 @@ uniform float uStrength;
 uniform float uNoiseScale;
 uniform int uNoiseOctaves;
 uniform float uNoisePersistence;
+uniform float uParticleSize;
+uniform float uParticleSpeed;
 
 attribute float aSize;
 attribute float aRandom;
@@ -1045,7 +1060,7 @@ float fbm(vec2 st) {
 
 void main() {
   vec3 pos = position;
-  float t = uTime * uSpeed;
+  float t = uTime * uSpeed * uParticleSpeed;
   
   // Continuous Flow: Particles move upward and wiggle
   pos.y += t * 0.5 + aRandom * 10.0;
@@ -1068,7 +1083,7 @@ void main() {
   
   // Size Attenuation: Particles further away are smaller
   // Modulated by noise for "twinkle" effect
-  gl_PointSize = aSize * (1.0 + noiseVal * 0.5) * (15.0 / -mvPosition.z);
+  gl_PointSize = aSize * uParticleSize * (1.0 + noiseVal * 0.5) * (15.0 / -mvPosition.z);
   
   vAlpha = 0.3 + 0.7 * smoothstep(-1.0, 1.0, noiseVal);
 }
@@ -1078,6 +1093,7 @@ export const PARTICLE_FRAGMENT_SHADER = `
 uniform vec3 uColor1;
 uniform vec3 uColor2;
 uniform vec3 uColor3;
+uniform float uParticleOpacity;
 
 varying float vAlpha;
 
@@ -1093,7 +1109,7 @@ void main() {
   vec3 color = mix(uColor1, uColor2, vAlpha);
   color = mix(color, uColor3, dist * 2.0); // Highlight centers
   
-  gl_FragColor = vec4(color, alpha * vAlpha);
+  gl_FragColor = vec4(color, alpha * vAlpha * uParticleOpacity);
 }
 `;
 

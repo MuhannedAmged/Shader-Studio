@@ -35,6 +35,13 @@ const DEFAULT_CONFIG: ShaderConfig = {
   quantization: 0.0,
   scanlines: 0.0,
   showParticles: true,
+  particleSize: 1.0,
+  particleSpeed: 1.0,
+  particleCount: 2000,
+  particleOpacity: 0.5,
+  rotation: 0.0,
+  zoom: 1.0,
+  timeOffset: 0.0,
   gradientType: GradientType.NOISE,
 };
 
