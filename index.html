@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shader Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              mono: ["JetBrains Mono", "monospace"],
+            },
+            colors: {
+              gray: {
+                950: "#0a0a0a", // Deep black
+                900: "#171717",
+                800: "#262626",
+              },
+            },
+            animation: {
+              "fade-in": "fadeIn 0.5s ease-out forwards",
+              "slide-up": "slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              "slide-right":
+                "slideRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+              "slide-down":
+                "slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            },
+            keyframes: {
+              fadeIn: {
+                "0%": { opacity: "0" },
+                "100%": { opacity: "1" },
+              },
+              slideUp: {
+                "0%": { transform: "translateY(20px)", opacity: "0" },
+                "100%": { transform: "translateY(0)", opacity: "1" },
+              },
+              slideRight: {
+                "0%": { transform: "translateX(-20px)", opacity: "0" },
+                "100%": { transform: "translateX(0)", opacity: "1" },
+              },
+              slideDown: {
+                "0%": {
+                  transform: "translateY(-20px) translateX(-50%)",
+                  opacity: "0",
+                },
+                "100%": {
+                  transform: "translateY(0) translateX(-50%)",
+                  opacity: "1",
+                },
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        background-color: #000;
+        color: #fff;
+        height: 100%;
+        overflow: hidden;
+      }
+      #root {
+        height: 100%;
+      }
+      /* Custom Scrollbar for Editor */
+      .controls::-webkit-scrollbar,
+      .editor-scrollbar::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .controls::-webkit-scrollbar-track,
+      .editor-scrollbar::-webkit-scrollbar-track {
+        background: #1e1e1e;
+      }
+      .controls::-webkit-scrollbar-thumb,
+      .editor-scrollbar::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 5px;
+        border: 2px solid #1e1e1e;
+      }
+      .controls::-webkit-scrollbar-thumb:hover,
+      .editor-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #444;
+      }
+      *::-webkit-scrollbar {
+        width: 0;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/": "https://esm.sh/react@18.3.1/",
+          "react-dom": "https://esm.sh/react-dom@18.3.1",
+          "react-dom/": "https://esm.sh/react-dom@18.3.1/",
+          "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.16.8?external=react,react-dom,three",
+          "@google/genai": "https://esm.sh/@google/genai@0.2.1",
+          "three": "https://esm.sh/three@0.164.1",
+          "lucide-react": "https://esm.sh/lucide-react@0.378.0",
+          "prismjs": "https://esm.sh/prismjs@1.29.0",
+          "prismjs/": "https://esm.sh/prismjs@1.29.0/",
+          "framer-motion": "https://esm.sh/framer-motion@11.0.8?external=react,react-dom"
+        }
+      }
+    </script>
+    <link rel="stylesheet" href="/index.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
