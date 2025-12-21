@@ -1,7 +1,24 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DEFAULT_FRAGMENT_SHADER } from "../utils/shaderUtils";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Use import.meta.env for Vite compatibility.
+// Note: API keys should be prefixed with VITE_ to be exposed to the client.
+const getApiKey = () => {
+  // @ts-ignore - Vite environment variables
+  return import.meta.env?.VITE_GEMINI_API_KEY || process.env.API_KEY || "";
+};
+
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = () => {
+  const apiKey = getApiKey();
+  if (!apiKey) return null;
+
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey });
+  }
+  return aiInstance;
+};
 
 // System instruction to ensure the model acts as a GLSL expert compatible with our Three.js setup.
 const SYSTEM_INSTRUCTION = `
@@ -35,10 +52,19 @@ You must return a JSON object with:
 - description: A short description of what you created.
 `;
 
-export const generateShaderCode = async (prompt: string): Promise<{ fragmentShader: string; description: string }> => {
+export const generateShaderCode = async (
+  prompt: string
+): Promise<{ fragmentShader: string; description: string }> => {
   try {
+    const ai = getAI();
+    if (!ai) {
+      throw new Error(
+        "Gemini API Key is not configured. Please set VITE_GEMINI_API_KEY in your environment."
+      );
+    }
+
     const response = await ai.models.generateContent({
-      model: "gemini-3-pro-preview", // Using Pro for better coding capabilities
+      model: "gemini-1.5-pro", // Updated to a more stable model name
       contents: `Create a GLSL fragment shader that looks like: ${prompt}`,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
@@ -62,14 +88,14 @@ export const generateShaderCode = async (prompt: string): Promise<{ fragmentShad
 
     const text = response.text;
     if (!text) throw new Error("No response from AI");
-    
+
     return JSON.parse(text);
   } catch (error) {
     console.error("Failed to generate shader:", error);
     // Fallback to default if AI fails
     return {
       fragmentShader: DEFAULT_FRAGMENT_SHADER,
-      description: "Fallback shader due to generation error."
+      description: "Fallback shader due to generation error.",
     };
   }
 };
