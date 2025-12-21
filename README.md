@@ -1,6 +1,6 @@
-# ✨ Shader Studio
+# ✨ Shader Studio - Interactive Procedural Shader Generator
 
-Shader Studio is a high-performance, interactive web application for creating, customizing, and exporting stunning procedural shaders. Built with React, Three.js, and GLSL, it provides a seamless experience for artists and developers to explore the beauty of mathematical patterns.
+**Shader Studio** is a high-performance, professional-grade interactive web application designed for creating, customizing, and exporting stunning **procedural shaders** and **generative art**. Built with **React**, **Three.js**, and **GLSL**, it offers a powerful suite of tools for artists, developers, and creative coders to explore the intersection of mathematics and visual design.
 
 ![Shader Studio Preview](./public/preview.png)
 
@@ -87,3 +87,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Inspired by the beauty of procedural generation and creative coding.
 - Built with the amazing tools from the [Poimandres](https://github.com/pmndrs) ecosystem.
+
+---
+
+## 🏷️ Keywords
+
+`shader-generator` `glsl-editor` `procedural-art` `threejs-react` `webgl-shaders` `generative-design` `creative-coding-tools` `gradient-generator` `animation-design` `gpu-rendering` `vfx-tools` `visual-effects` `mathematical-art` `react-three-fiber` `vite-project` `typescript-shaders` `export-gif-video`
