@@ -31,6 +31,7 @@ import {
 import { ShaderConfig, GradientType } from "../types";
 import { hexToRgb, getFragmentShader } from "../utils/shaderUtils";
 import { exportToGIF } from "../services/gifService";
+import { exportToVideo } from "../services/videoService";
 
 interface ControlsProps {
   config: ShaderConfig;
@@ -96,6 +97,7 @@ const Controls: React.FC<ControlsProps> = ({
   );
   const [showGifSettings, setShowGifSettings] = useState(false);
   const [showPostProcessing, setShowPostProcessing] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"gif" | "video">("gif");
 
   useEffect(() => {
     // Initialize visibility based on screen width
@@ -153,6 +155,45 @@ const Controls: React.FC<ControlsProps> = ({
       setIsExporting(false);
       setExportProgress(0);
       onManualTimeChange(undefined); // Return to automatic time
+    }
+  };
+
+  const handleDownloadVideo = async () => {
+    if (!canvasRef) return;
+
+    setIsExporting(true);
+    setExportProgress(0);
+
+    try {
+      const blob = await exportToVideo(canvasRef, {
+        width: gifWidth,
+        height: gifHeight,
+        duration: gifDuration,
+        fps: gifFPS,
+        loopType: gifLoopType,
+        onProgress: (p) => setExportProgress(p),
+        onFrame: async (time) => {
+          onManualTimeChange(time);
+          await new Promise((resolve) => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(resolve);
+            });
+          });
+        },
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `shader-studio-${Date.now()}.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Video Export failed:", error);
+    } finally {
+      setIsExporting(false);
+      setExportProgress(0);
+      onManualTimeChange(undefined);
     }
   };
 
@@ -1113,6 +1154,34 @@ const Controls: React.FC<ControlsProps> = ({
 
               {showGifSettings && (
                 <div className="space-y-3 p-3 bg-white/[0.02] border border-white/5 rounded-xl animate-fade-in">
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                      Format
+                    </label>
+                    <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setExportFormat("gif")}
+                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
+                          exportFormat === "gif"
+                            ? "bg-indigo-500 text-white shadow-lg"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        GIF
+                      </button>
+                      <button
+                        onClick={() => setExportFormat("video")}
+                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
+                          exportFormat === "video"
+                            ? "bg-indigo-500 text-white shadow-lg"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        Video (WebM)
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1.5">
                       <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
@@ -1153,23 +1222,25 @@ const Controls: React.FC<ControlsProps> = ({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
-                        Quality
-                      </label>
-                      <select
-                        value={gifQuality}
-                        onChange={(e) =>
-                          setGifQuality(parseInt(e.target.value))
-                        }
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                      >
-                        <option value="1">High (Slow)</option>
-                        <option value="5">Medium</option>
-                        <option value="10">Standard</option>
-                        <option value="20">Low (Fast)</option>
-                      </select>
-                    </div>
+                    {exportFormat === "gif" && (
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                          Quality
+                        </label>
+                        <select
+                          value={gifQuality}
+                          onChange={(e) =>
+                            setGifQuality(parseInt(e.target.value))
+                          }
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                        >
+                          <option value="1">High (Slow)</option>
+                          <option value="5">Medium</option>
+                          <option value="10">Standard</option>
+                          <option value="20">Low (Fast)</option>
+                        </select>
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
                         FPS
@@ -1233,7 +1304,7 @@ const Controls: React.FC<ControlsProps> = ({
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <button
                   onClick={handleDownloadImage}
                   disabled={!canvasRef}
@@ -1243,22 +1314,23 @@ const Controls: React.FC<ControlsProps> = ({
                 </button>
 
                 <button
-                  onClick={handleDownloadGIF}
-                  disabled={isExporting || !canvasRef}
-                  className={`flex-1 h-10 flex items-center justify-center gap-2 rounded-xl text-sm font-medium transition-all border ${
-                    isExporting
-                      ? "bg-indigo-500/20 border-indigo-500/30 text-indigo-300"
-                      : "bg-indigo-500 hover:bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/20"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  onClick={
+                    exportFormat === "gif"
+                      ? handleDownloadGIF
+                      : handleDownloadVideo
+                  }
+                  disabled={isExporting}
+                  className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 mt-2"
                 >
                   {isExporting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {Math.round(exportProgress * 100)}%
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Rendering... {Math.round(exportProgress * 100)}%
                     </>
                   ) : (
                     <>
-                      <Download className="w-4 h-4" /> GIF
+                      <Download className="w-3 h-3" />
+                      Download {exportFormat === "gif" ? "GIF" : "Video"}
                     </>
                   )}
                 </button>
