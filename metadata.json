@@ -1,5 +1,5 @@
 {
   "name": "Shader Studio",
-  "description": "A high-performance, dark-mode-only shader gradient generator powered by WebGL. Design animated backgrounds and export GLSL code.",
+  "description": "High-performance interactive web application for creating, customizing, and exporting stunning procedural shaders and generative art using React, Three.js, and GLSL.",
   "requestFramePermissions": []
 }
