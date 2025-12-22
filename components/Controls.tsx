@@ -316,7 +316,7 @@ const Controls: React.FC<ControlsProps> = ({
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 <Layers className="w-3 h-3" /> Type
               </label>
-              <div className="grid grid-cols-5 gap-1.5">
+              <div className="grid grid-cols-3 gap-1.5">
                 {Object.values(GradientType).map((type) => (
                   <button
                     key={type}

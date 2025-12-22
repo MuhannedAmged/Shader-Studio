@@ -40,7 +40,7 @@ const DEFAULT_CONFIG: ShaderConfig = {
   particleCount: 2000,
   particleOpacity: 0.5,
   rotation: 0.0,
-  zoom: 1.0,
+  zoom: 0.3,
   timeOffset: 0.0,
   gradientType: GradientType.NOISE,
 };
