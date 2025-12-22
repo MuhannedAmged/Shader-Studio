@@ -70,6 +70,8 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
       uBloomThreshold: { value: config.bloomThreshold },
       uQuantization: { value: config.quantization },
       uScanlines: { value: config.scanlines },
+      uGamma: { value: config.gamma },
+      uEmboss: { value: config.emboss },
       uRotation: { value: config.rotation },
       uZoom: { value: config.zoom },
       uTimeOffset: { value: config.timeOffset },
@@ -117,6 +119,8 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
         config.bloomThreshold;
       materialRef.current.uniforms.uQuantization.value = config.quantization;
       materialRef.current.uniforms.uScanlines.value = config.scanlines;
+      materialRef.current.uniforms.uGamma.value = config.gamma;
+      materialRef.current.uniforms.uEmboss.value = config.emboss;
       materialRef.current.uniforms.uRotation.value = config.rotation;
       materialRef.current.uniforms.uZoom.value = config.zoom;
       materialRef.current.uniforms.uTimeOffset.value = config.timeOffset;

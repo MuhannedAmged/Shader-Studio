@@ -44,6 +44,8 @@ uniform float uScanlines;
 uniform float uRotation;
 uniform float uZoom;
 uniform float uTimeOffset;
+uniform float uGamma;
+uniform float uEmboss;
 uniform sampler2D tDiffuse;
 
 vec2 transformUV(vec2 uv) {
@@ -173,6 +175,20 @@ vec3 applyPostEffects(vec3 color, vec2 uv) {
     if (uScanlines > 0.0) {
         float scanline = sin(uv.y * 800.0) * 0.04 * uScanlines;
         color -= scanline;
+    }
+    
+    // 7. Emboss
+    if (uEmboss > 0.0) {
+        vec2 offset = vec2(0.002, 0.002);
+        vec3 colTL = texture2D(tDiffuse, uv - offset).rgb;
+        vec3 colBR = texture2D(tDiffuse, uv + offset).rgb;
+        float diff = dot(colTL - colBR, vec3(0.299, 0.587, 0.114));
+        color += diff * uEmboss * 2.0;
+    }
+
+    // 8. Gamma
+    if (uGamma > 0.0 && uGamma != 1.0) {
+        color = pow(color, vec3(1.0 / uGamma));
     }
     
     return color;
@@ -864,6 +880,233 @@ void main() {
 }
 `;
 
+export const NEON_CITY_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+float grid(vec2 uv, float scale) {
+    vec2 grid = fract(uv * scale);
+    return step(0.95, max(grid.x, grid.y));
+}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    
+    // Perspective grid
+    vec2 p = uv - 0.5;
+    float horizon = 0.2;
+    float fov = 0.5;
+    
+    // 3D projection simulation
+    float z = 1.0 / (abs(p.y - horizon) + 0.01);
+    vec2 gridUV = vec2(p.x * z * fov, z);
+    gridUV.y -= time * 2.0;
+    
+    float g = grid(gridUV, 5.0 * uDensity);
+    float glow = smoothstep(0.0, 1.0, z * 0.05);
+    
+    // Sun
+    float sunDist = length(p - vec2(0.0, 0.1));
+    float sun = smoothstep(0.3, 0.29, sunDist);
+    float sunGlow = smoothstep(0.5, 0.3, sunDist);
+    
+    // Scanlines on sun
+    float sunLines = step(0.1, fract(p.y * 20.0 + time * 0.5));
+    sun *= sunLines;
+    
+    vec3 color = vec3(0.0);
+    
+    // Grid color
+    color += mix(vec3(0.0), uColor1, g * glow * uStrength);
+    
+    // Background/Sky
+    color += mix(uColor3, vec3(0.0), p.y + 0.5);
+    
+    // Sun color
+    color += mix(vec3(0.0), uColor2, sun + sunGlow * 0.5);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const CIRCUIT_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+float circuit(vec2 p) {
+    p = fract(p);
+    float r = 0.3;
+    float v = 0.0;
+    float l = length(p - 0.5);
+    v += smoothstep(r, r - 0.02, l) - smoothstep(r - 0.05, r - 0.07, l);
+    v += dot(p, p); // subtle noise
+    return v;
+}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = uv * uDensity * 8.0;
+    
+    vec2 id = floor(p);
+    vec2 gv = fract(p) - 0.5;
+    
+    float n = fbm(id * 0.1 + time * 0.05);
+    
+    float mask = 0.0;
+    if (n > 0.5) {
+        float width = 0.1;
+        float d = min(abs(gv.x), abs(gv.y));
+        mask = smoothstep(width, width - 0.02, d);
+        
+        // Nodes
+        if (length(gv) < 0.2) mask = 1.0;
+    }
+    
+    // Pulse
+    float pulse = sin(n * 10.0 + time * 5.0) * 0.5 + 0.5;
+    
+    vec3 color = mix(uColor3, uColor1, mask * 0.5);
+    color = mix(color, uColor2, mask * pulse * uStrength);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const DNA_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = (uv - 0.5) * uDensity * 4.0;
+    
+    float v = 0.0;
+    
+    // Double Helix
+    for (float i = 0.0; i < 2.0; i++) {
+        float t = time + i * PI;
+        float y = sin(p.x * 2.0 + t) * 0.5;
+        float d = length(vec2(p.x, p.y - y));
+        v += 0.05 / (d + 0.01);
+        
+        // Rungs
+        if (abs(p.x * 10.0 - floor(p.x * 10.0 + 0.5)) < 0.1) {
+             float y2 = sin(p.x * 2.0 + t + PI) * 0.5;
+             if (p.y < max(y, y2) && p.y > min(y, y2)) {
+                 v += 0.5 * uStrength;
+             }
+        }
+    }
+    
+    vec3 color = mix(uColor3, uColor1, v * 0.5);
+    color = mix(color, uColor2, smoothstep(0.0, 1.0, v * 0.2));
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const MATRIX_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+float random(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = uv * uDensity * 20.0;
+    
+    vec2 ip = floor(p);
+    vec2 fp = fract(p);
+    
+    float dropSpeed = 2.0 + random(vec2(ip.x, 0.0)) * 3.0;
+    float y = mod(ip.y + time * dropSpeed, 20.0);
+    
+    float trail = smoothstep(15.0, 0.0, y);
+    float head = step(0.0, y) * step(y, 1.0);
+    
+    float char = step(0.5, random(ip + floor(time * 5.0)));
+    
+    float brightness = (trail + head * 2.0) * char * uStrength;
+    
+    vec3 color = mix(uColor3, uColor1, brightness * 0.5);
+    color = mix(color, uColor2, head * brightness);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const GLITCH_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+float hash(vec2 p) {
+    float h = dot(p, vec2(127.1, 311.7));
+    return fract(sin(h) * 43758.5453123);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+               mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    
+    // Glitch displacement
+    float glitch = step(0.95, sin(time * 10.0 + uv.y * 10.0));
+    float shift = (noise(vec2(uv.y * 10.0, time)) - 0.5) * 0.2 * uStrength * glitch;
+    
+    vec2 p = uv;
+    p.x += shift;
+    
+    // RGB Split
+    float split = 0.02 * uDistortion * uStrength;
+    float r = fbm(p + vec2(split, 0.0) * uDensity);
+    float g = fbm(p);
+    float b = fbm(p - vec2(split, 0.0) * uDensity);
+    
+    // Block noise
+    float block = step(0.9, noise(vec2(time * 10.0, uv.y * 5.0))) * uStrength;
+    vec3 color = vec3(r, g, b);
+    color += block * uColor2;
+    
+    color = mix(color, uColor1, r);
+    color = mix(color, uColor3, b);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
 export const getFragmentShader = (type: GradientType): string => {
   switch (type) {
     case GradientType.NOISE:
@@ -912,6 +1155,16 @@ export const getFragmentShader = (type: GradientType): string => {
       return HALFTONE_FRAGMENT_SHADER;
     case GradientType.TRUCHET:
       return TRUCHET_FRAGMENT_SHADER;
+    case GradientType.NEON_CITY:
+      return NEON_CITY_FRAGMENT_SHADER;
+    case GradientType.CIRCUIT:
+      return CIRCUIT_FRAGMENT_SHADER;
+    case GradientType.DNA:
+      return DNA_FRAGMENT_SHADER;
+    case GradientType.MATRIX:
+      return MATRIX_FRAGMENT_SHADER;
+    case GradientType.GLITCH:
+      return GLITCH_FRAGMENT_SHADER;
     default:
       return NOISE_FRAGMENT_SHADER;
   }

@@ -34,6 +34,8 @@ const DEFAULT_CONFIG: ShaderConfig = {
   bloomThreshold: 0.5,
   quantization: 0.0,
   scanlines: 0.0,
+  gamma: 1.0,
+  emboss: 0.0,
   showParticles: true,
   particleSize: 1.0,
   particleSpeed: 1.0,

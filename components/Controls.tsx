@@ -97,7 +97,11 @@ const Controls: React.FC<ControlsProps> = ({
   );
   const [showGifSettings, setShowGifSettings] = useState(false);
   const [showPostProcessing, setShowPostProcessing] = useState(false);
-  const [exportFormat, setExportFormat] = useState<"gif" | "video">("gif");
+  const [exportFormat, setExportFormat] = useState<"gif" | "video" | "image">(
+    "gif"
+  );
+  const [imageFormat, setImageFormat] = useState<"png" | "jpg">("png");
+  const [imageQuality, setImageQuality] = useState(0.9);
 
   useEffect(() => {
     // Initialize visibility based on screen width
@@ -210,11 +214,12 @@ const Controls: React.FC<ControlsProps> = ({
     // Draw the current frame
     ctx.drawImage(canvasRef, 0, 0, gifWidth, gifHeight);
 
-    // Trigger download
-    const url = tempCanvas.toDataURL("image/png");
+    // Trigger download with custom format and quality
+    const mimeType = imageFormat === "png" ? "image/png" : "image/jpeg";
+    const url = tempCanvas.toDataURL(mimeType, imageQuality);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `shader-studio-${Date.now()}.png`;
+    a.download = `shader-studio-${Date.now()}.${imageFormat}`;
     a.click();
   };
 
@@ -1280,6 +1285,48 @@ const Controls: React.FC<ControlsProps> = ({
                       className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
                     />
                   </div>
+
+                  {/* Gamma */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-400">Gamma</span>
+                      <span className="text-xs font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
+                        {config.gamma.toFixed(2)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="2.5"
+                      step="0.05"
+                      value={config.gamma}
+                      onChange={(e) =>
+                        handleSliderChange("gamma", parseFloat(e.target.value))
+                      }
+                      className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-orange-500 hover:accent-orange-400 transition-all"
+                    />
+                  </div>
+
+                  {/* Emboss */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-400">Emboss</span>
+                      <span className="text-xs font-mono text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded">
+                        {config.emboss.toFixed(2)}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={config.emboss}
+                      onChange={(e) =>
+                        handleSliderChange("emboss", parseFloat(e.target.value))
+                      }
+                      className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-gray-500 hover:accent-gray-400 transition-all"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -1340,7 +1387,17 @@ const Controls: React.FC<ControlsProps> = ({
                             : "text-gray-400 hover:text-white"
                         }`}
                       >
-                        Video (WebM)
+                        Video
+                      </button>
+                      <button
+                        onClick={() => setExportFormat("image")}
+                        className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
+                          exportFormat === "image"
+                            ? "bg-indigo-500 text-white shadow-lg"
+                            : "text-gray-400 hover:text-white"
+                        }`}
+                      >
+                        Image
                       </button>
                     </div>
                   </div>
@@ -1384,105 +1441,167 @@ const Controls: React.FC<ControlsProps> = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    {exportFormat === "gif" && (
+                  {/* Image Settings */}
+                  {exportFormat === "image" && (
+                    <div className="space-y-3">
                       <div className="space-y-1.5">
                         <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
-                          Quality
+                          Format Type
+                        </label>
+                        <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5">
+                          <button
+                            onClick={() => setImageFormat("png")}
+                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
+                              imageFormat === "png"
+                                ? "bg-indigo-500 text-white shadow-lg"
+                                : "text-gray-400 hover:text-white"
+                            }`}
+                          >
+                            PNG
+                          </button>
+                          <button
+                            onClick={() => setImageFormat("jpg")}
+                            className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
+                              imageFormat === "jpg"
+                                ? "bg-indigo-500 text-white shadow-lg"
+                                : "text-gray-400 hover:text-white"
+                            }`}
+                          >
+                            JPG
+                          </button>
+                        </div>
+                      </div>
+
+                      {imageFormat === "jpg" && (
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center ml-1">
+                            <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold">
+                              Quality
+                            </label>
+                            <span className="text-[9px] font-mono text-indigo-300">
+                              {Math.round(imageQuality * 100)}%
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0.1"
+                            max="1"
+                            step="0.1"
+                            value={imageQuality}
+                            onChange={(e) =>
+                              setImageQuality(parseFloat(e.target.value))
+                            }
+                            className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 hover:accent-indigo-400 transition-all"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Video/GIF Settings */}
+                  {exportFormat !== "image" && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        {exportFormat === "gif" && (
+                          <div className="space-y-1.5">
+                            <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                              Quality
+                            </label>
+                            <select
+                              value={gifQuality}
+                              onChange={(e) =>
+                                setGifQuality(parseInt(e.target.value))
+                              }
+                              className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                            >
+                              <option value="1">High (Slow)</option>
+                              <option value="5">Medium</option>
+                              <option value="10">Standard</option>
+                              <option value="20">Low (Fast)</option>
+                            </select>
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                            FPS
+                          </label>
+                          <select
+                            value={gifFPS}
+                            onChange={(e) =>
+                              setGifFPS(parseInt(e.target.value))
+                            }
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
+                          >
+                            <option value="15">15 FPS</option>
+                            <option value="30">30 FPS</option>
+                            <option value="60">60 FPS</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                          Duration
                         </label>
                         <select
-                          value={gifQuality}
+                          value={gifDuration}
                           onChange={(e) =>
-                            setGifQuality(parseInt(e.target.value))
+                            setGifDuration(parseInt(e.target.value))
                           }
                           className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
                         >
-                          <option value="1">High (Slow)</option>
-                          <option value="5">Medium</option>
-                          <option value="10">Standard</option>
-                          <option value="20">Low (Fast)</option>
+                          <option value="1">1 Second</option>
+                          <option value="2">2 Seconds</option>
+                          <option value="3">3 Seconds</option>
+                          <option value="5">5 Seconds</option>
+                          <option value="10">10 Seconds</option>
                         </select>
                       </div>
-                    )}
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
-                        FPS
-                      </label>
-                      <select
-                        value={gifFPS}
-                        onChange={(e) => setGifFPS(parseInt(e.target.value))}
-                        className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                      >
-                        <option value="15">15 FPS</option>
-                        <option value="30">30 FPS</option>
-                        <option value="60">60 FPS</option>
-                      </select>
-                    </div>
-                  </div>
 
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
-                      Duration
-                    </label>
-                    <select
-                      value={gifDuration}
-                      onChange={(e) => setGifDuration(parseInt(e.target.value))}
-                      className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
-                    >
-                      <option value="1">1 Second</option>
-                      <option value="2">2 Seconds</option>
-                      <option value="3">3 Seconds</option>
-                      <option value="5">5 Seconds</option>
-                      <option value="10">10 Seconds</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
-                      Loop Type
-                    </label>
-                    <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 gap-1">
-                      <button
-                        onClick={() => setGifLoopType("normal")}
-                        className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
-                          gifLoopType === "normal"
-                            ? "bg-indigo-500 text-white shadow-sm"
-                            : "text-gray-500 hover:text-gray-300"
-                        }`}
-                      >
-                        Normal
-                      </button>
-                      <button
-                        onClick={() => setGifLoopType("pingpong")}
-                        className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
-                          gifLoopType === "pingpong"
-                            ? "bg-indigo-500 text-white shadow-sm"
-                            : "text-gray-500 hover:text-gray-300"
-                        }`}
-                      >
-                        Seamless
-                      </button>
-                    </div>
-                  </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                          Loop Type
+                        </label>
+                        <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 gap-1">
+                          <button
+                            onClick={() => setGifLoopType("normal")}
+                            className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
+                              gifLoopType === "normal"
+                                ? "bg-indigo-500 text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-300"
+                            }`}
+                          >
+                            Normal
+                          </button>
+                          <button
+                            onClick={() => setGifLoopType("pingpong")}
+                            className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
+                              gifLoopType === "pingpong"
+                                ? "bg-indigo-500 text-white shadow-sm"
+                                : "text-gray-500 hover:text-gray-300"
+                            }`}
+                          >
+                            Seamless
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
               <div className="grid grid-cols-1 gap-2">
                 <button
-                  onClick={handleDownloadImage}
-                  disabled={!canvasRef}
-                  className="h-10 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white rounded-xl text-sm font-medium transition-colors border border-white/5 disabled:opacity-50"
-                >
-                  <ImageIcon className="w-4 h-4" /> PNG
-                </button>
-
-                <button
-                  onClick={
-                    exportFormat === "gif"
-                      ? handleDownloadGIF
-                      : handleDownloadVideo
-                  }
-                  disabled={isExporting}
+                  onClick={() => {
+                    if (exportFormat === "image") {
+                      handleDownloadImage();
+                    } else if (exportFormat === "gif") {
+                      handleDownloadGIF();
+                    } else {
+                      handleDownloadVideo();
+                    }
+                  }}
+                  disabled={isExporting || !canvasRef}
                   className="w-full h-10 bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 mt-2"
                 >
                   {isExporting ? (
@@ -1493,7 +1612,12 @@ const Controls: React.FC<ControlsProps> = ({
                   ) : (
                     <>
                       <Download className="w-3 h-3" />
-                      Download {exportFormat === "gif" ? "GIF" : "Video"}
+                      Download{" "}
+                      {exportFormat === "image"
+                        ? imageFormat.toUpperCase()
+                        : exportFormat === "gif"
+                        ? "GIF"
+                        : "Video"}
                     </>
                   )}
                 </button>
@@ -1530,7 +1654,7 @@ const Controls: React.FC<ControlsProps> = ({
 
         {/* Bottom info */}
         <div className="mt-4 text-[10px] text-gray-600 text-center font-mono">
-          v1.4.0 • WebGL 2.0
+          v1.5.0 • WebGL 2.0
         </div>
       </div>
     </>

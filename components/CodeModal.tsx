@@ -383,7 +383,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                   Shader Studio
                 </h3>
                 <p className="text-[10px] text-gray-500 mt-1 ml-9 font-medium uppercase tracking-widest">
-                  GLSL Editor • v1.4.0
+                  GLSL Editor • v1.5.0
                 </p>
               </div>
 

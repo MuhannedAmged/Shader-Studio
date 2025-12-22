@@ -24,6 +24,8 @@ export interface ShaderConfig {
   bloomThreshold: number;
   quantization: number;
   scanlines: number;
+  gamma: number;
+  emboss: number;
   showParticles: boolean;
   particleSize: number;
   particleSpeed: number;
@@ -59,6 +61,11 @@ export enum GradientType {
   RAYMARCHING = "RAYMARCHING",
   HALFTONE = "HALFTONE",
   TRUCHET = "TRUCHET",
+  NEON_CITY = "NEON_CITY",
+  CIRCUIT = "CIRCUIT",
+  DNA = "DNA",
+  MATRIX = "MATRIX",
+  GLITCH = "GLITCH",
 }
 
 export interface Preset {
