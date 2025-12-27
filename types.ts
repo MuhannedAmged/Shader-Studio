@@ -35,6 +35,19 @@ export interface ShaderConfig {
   zoom: number;
   timeOffset: number;
   gradientType: GradientType;
+  particleType: ParticleType;
+  particleColor1: string;
+  particleColor2: string;
+  bloomIntensity: number;
+  bloomRadius: number;
+}
+
+export enum ParticleType {
+  STAR = "STAR",
+  SNOW = "SNOW",
+  BUBBLES = "BUBBLES",
+  RAIN = "RAIN",
+  FIREFLIES = "FIREFLIES",
 }
 
 export enum GradientType {
@@ -66,6 +79,10 @@ export enum GradientType {
   DNA = "DNA",
   MATRIX = "MATRIX",
   GLITCH = "GLITCH",
+  CLOUD = "CLOUD",
+  GALAXY = "GALAXY",
+  OCEAN = "OCEAN",
+  FIRE = "FIRE",
 }
 
 export interface Preset {

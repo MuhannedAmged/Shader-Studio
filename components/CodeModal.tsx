@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import Prism from "prismjs";
 import { motion, AnimatePresence } from "framer-motion";
+import { ShaderConfig } from "../types";
+import { generateStandaloneShader } from "../utils/shaderUtils";
 
 // Initialization block for Prism language definition
 try {
@@ -134,8 +136,8 @@ const ALL_SUGGESTIONS = [...APP_UNIFORMS, ...GLSL_KEYWORDS];
 interface CodeEditorProps {
   isOpen: boolean;
   onClose: () => void;
-  code: string;
   onChange: (newCode: string) => void;
+  config: ShaderConfig;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -143,8 +145,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   onClose,
   code,
   onChange,
+  config,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [showShadertoy, setShowShadertoy] = useState(false);
   const [localCode, setLocalCode] = useState(code);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [suggestionIndex, setSuggestionIndex] = useState(0);
@@ -182,7 +186,10 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   }, [localCode]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(localCode);
+    const textToCopy = showShadertoy
+      ? generateStandaloneShader(config)
+      : localCode;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -409,6 +416,27 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 <div className="w-px h-6 bg-white/10 mx-1" />
 
                 <button
+                  onClick={() => setShowShadertoy(!showShadertoy)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-medium border ${
+                    showShadertoy
+                      ? "bg-indigo-500/20 border-indigo-500 text-indigo-200"
+                      : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                  }`}
+                  title="Toggle Shadertoy Compatibility"
+                >
+                  <Sparkles
+                    className={`w-3.5 h-3.5 ${
+                      showShadertoy ? "animate-pulse" : ""
+                    }`}
+                  />
+                  <span>
+                    {showShadertoy ? "Shadertoy Mode" : "Generic GLSL"}
+                  </span>
+                </button>
+
+                <div className="w-px h-6 bg-white/10 mx-1" />
+
+                <button
                   onClick={onClose}
                   className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all text-gray-400"
                 >
@@ -416,6 +444,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 </button>
               </div>
             </div>
+
+            {showShadertoy && (
+              <div className="px-6 py-2 bg-indigo-500/5 border-b border-indigo-500/10 animate-slide-down">
+                <p className="text-[10px] text-indigo-300 font-medium">
+                  <Sparkles className="w-3 h-3 inline-block mr-1 mb-0.5" />
+                  Shadertoy compatibility mode enabled. Uniforms are mapped to
+                  iTime, iResolution, etc.
+                </p>
+              </div>
+            )}
 
             {/* Editor Area */}
             <div
@@ -451,14 +489,26 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                       boxSizing: "border-box",
                     }}
                     dangerouslySetInnerHTML={{
-                      __html: highlightedCode + "<br />",
+                      __html:
+                        (showShadertoy
+                          ? Prism.highlight(
+                              generateStandaloneShader(config),
+                              Prism.languages.glsl,
+                              "glsl"
+                            )
+                          : highlightedCode) + "<br />",
                     }}
                   />
 
                   {/* Input Layer */}
                   <textarea
                     ref={textareaRef}
-                    value={localCode}
+                    value={
+                      showShadertoy
+                        ? generateStandaloneShader(config)
+                        : localCode
+                    }
+                    readOnly={showShadertoy}
                     onChange={handleInput}
                     onKeyDown={handleKeyDown}
                     spellCheck={false}

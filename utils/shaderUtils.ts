@@ -1,4 +1,4 @@
-import { GradientType } from "../types";
+import { GradientType, ShaderConfig, ParticleType } from "../types";
 
 export const DEFAULT_VERTEX_SHADER = `
 varying vec2 vUv;
@@ -46,6 +46,8 @@ uniform float uZoom;
 uniform float uTimeOffset;
 uniform float uGamma;
 uniform float uEmboss;
+uniform float uBloomIntensity;
+uniform float uBloomRadius;
 uniform sampler2D tDiffuse;
 
 vec2 transformUV(vec2 uv) {
@@ -92,7 +94,7 @@ float fbm(vec2 st) {
     float value = 0.0;
     float amplitude = 0.5;
     
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 5; i++) {
         if (i >= uNoiseOctaves) break;
         value += amplitude * snoise(st);
         st *= 2.0;
@@ -136,18 +138,19 @@ vec3 applyCorrections(vec3 color) {
 }
 
 vec3 applyPostEffects(vec3 color, vec2 uv) {
-    // 1. Chromatic Aberration
+    // 1. Chromatic Aberration (Needs tDiffuse)
     if (uChromaticAberration > 0.0) {
         float amount = uChromaticAberration * 0.02;
-        float r = texture2D(tDiffuse, uv + vec2(amount, 0.0)).r;
-        float g = color.g;
-        float b = texture2D(tDiffuse, uv - vec2(amount, 0.0)).b;
-        color = vec3(r, g, b);
+        // In some environments tDiffuse might be empty
+        vec3 splitColor = color;
+        splitColor.r = texture2D(tDiffuse, uv + vec2(amount, 0.0)).r;
+        splitColor.b = texture2D(tDiffuse, uv - vec2(amount, 0.0)).b;
+        color = mix(color, splitColor, step(0.1, float(textureSize(tDiffuse, 0).x)));
     }
 
     // 2. Grain
     if (uGrain > 0.0) {
-        float noise = (fract(sin(dot(uv, vec2(12.9898,78.233)*uTime)) * 43758.5453));
+        float noise = (fract(sin(dot(uv, vec2(12.9898,78.233)*(uTime + uTimeOffset))) * 43758.5453));
         color = mix(color, color + (noise - 0.5) * 0.2, uGrain);
     }
     
@@ -177,8 +180,8 @@ vec3 applyPostEffects(vec3 color, vec2 uv) {
         color -= scanline;
     }
     
-    // 7. Emboss
-    if (uEmboss > 0.0) {
+    // 7. Emboss (Needs tDiffuse)
+    if (uEmboss > 0.0 && textureSize(tDiffuse, 0).x > 1) {
         vec2 offset = vec2(0.002, 0.002);
         vec3 colTL = texture2D(tDiffuse, uv - offset).rgb;
         vec3 colBR = texture2D(tDiffuse, uv + offset).rgb;
@@ -1057,6 +1060,63 @@ void main() {
 }
 `;
 
+export const CLOUD_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = uv * uDensity;
+    
+    float n1 = fbm(p * 2.0 + time * 0.1);
+    float n2 = fbm(p * 4.0 - time * 0.05 + n1);
+    float cloud = smoothstep(0.3, 0.7, n2 * uStrength + 0.5 * uv.y);
+    
+    vec3 color = mix(uColor1, uColor2, cloud);
+    color = mix(color, uColor3, n1 * 0.5);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const GALAXY_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = (uv - 0.5) * uDensity * 5.0;
+    
+    float r = length(p);
+    float a = atan(p.y, p.x);
+    
+    // Spiral arms
+    float spiral = sin(a * 2.0 - r * 2.0 + time);
+    spiral = smoothstep(-0.5, 0.5, spiral);
+    
+    // Nebula noise
+    float n = fbm(p * uNoiseScale + time * 0.1);
+    
+    vec3 color = mix(uColor1, uColor2, spiral * 0.5 + 0.5);
+    color = mix(color, uColor3, n * uStrength);
+    
+    // Center glow
+    color += uColor2 * (0.2 / (r + 0.1));
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
 export const GLITCH_FRAGMENT_SHADER = `
 ${COMMON_UNIFORMS_AND_UTILS}
 
@@ -1101,6 +1161,62 @@ void main() {
     
     color = mix(color, uColor1, r);
     color = mix(color, uColor3, b);
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const OCEAN_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = uv * uDensity;
+    
+    float wave1 = sin(p.x * 2.0 + time) * 0.1;
+    float wave2 = sin(p.y * 3.0 - time * 0.5) * 0.1;
+    float sea = fbm(p + vec2(wave1, wave2));
+    
+    vec3 color = mix(uColor1, uColor2, sea * uStrength);
+    color = mix(color, uColor3, uv.y);
+    
+    // Highlights
+    color += pow(max(0.0, sea), 10.0) * 0.5;
+    
+    color = applyCorrections(color);
+    gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
+}
+`;
+
+export const FIRE_FRAGMENT_SHADER = `
+${COMMON_UNIFORMS_AND_UTILS}
+
+void main() {
+    vec2 uv = transformUV(vUv);
+    if (uPixelation > 0.0) {
+        float pixels = 200.0 * (1.1 - uPixelation);
+        uv = floor(uv * pixels) / pixels;
+    }
+    float time = (uTime + uTimeOffset) * uSpeed;
+    vec2 p = uv * uDensity;
+    
+    // Upward movement
+    p.y -= time * 2.0;
+    
+    float n = fbm(p + fbm(p * 0.5));
+    float fire = smoothstep(0.0, 1.0, n * uStrength + (1.0 - uv.y));
+    
+    vec3 color = mix(uColor1, uColor2, fire);
+    color = mix(color, uColor3, fire * fire);
+    
+    // Core glow
+    color += uColor2 * (fire * fire * 0.5);
     
     color = applyCorrections(color);
     gl_FragColor = vec4(applyPostEffects(color, uv), 1.0);
@@ -1165,6 +1281,14 @@ export const getFragmentShader = (type: GradientType): string => {
       return MATRIX_FRAGMENT_SHADER;
     case GradientType.GLITCH:
       return GLITCH_FRAGMENT_SHADER;
+    case GradientType.CLOUD:
+      return CLOUD_FRAGMENT_SHADER;
+    case GradientType.GALAXY:
+      return GALAXY_FRAGMENT_SHADER;
+    case GradientType.OCEAN:
+      return OCEAN_FRAGMENT_SHADER;
+    case GradientType.FIRE:
+      return FIRE_FRAGMENT_SHADER;
     default:
       return NOISE_FRAGMENT_SHADER;
   }
@@ -1268,6 +1392,7 @@ uniform int uNoiseOctaves;
 uniform float uNoisePersistence;
 uniform float uParticleSize;
 uniform float uParticleSpeed;
+uniform int uParticleType; // 0: STAR, 1: SNOW, 2: BUBBLES, 3: RAIN, 4: FIREFLIES
 
 attribute float aSize;
 attribute float aRandom;
@@ -1302,7 +1427,7 @@ float snoise(vec2 v){
 float fbm(vec2 st) {
     float value = 0.0;
     float amplitude = 0.5;
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 5; i++) {
         if (i >= uNoiseOctaves) break;
         value += amplitude * snoise(st);
         st *= 2.0;
@@ -1315,37 +1440,45 @@ void main() {
   vec3 pos = position;
   float t = uTime * uSpeed * uParticleSpeed;
   
-  // Continuous Flow: Particles move upward and wiggle
-  pos.y += t * 0.5 + aRandom * 10.0;
-  pos.x += sin(t * 0.5 + aRandom * 20.0) * 0.5;
+  if (uParticleType == 0) { // STAR
+      pos.y += t * 0.2 + aRandom * 10.0;
+      pos.x += sin(t * 0.1 + aRandom * 20.0) * 0.2;
+  } else if (uParticleType == 1) { // SNOW
+      pos.y -= t * 0.5 + aRandom * 5.0;
+      pos.x += sin(t * 0.5 + aRandom * 10.0) * 0.3;
+  } else if (uParticleType == 2) { // BUBBLES
+      pos.y += t * 0.8 + aRandom * 5.0;
+      pos.x += cos(t * 0.4 + aRandom * 15.0) * 0.4;
+  } else if (uParticleType == 3) { // RAIN
+      pos.y -= t * 2.0 + aRandom * 2.0;
+      pos.x += (aRandom - 0.5) * 0.1;
+  } else if (uParticleType == 4) { // FIREFLIES
+      pos.x += sin(t * 0.5 + aRandom * 20.0) * 2.0;
+      pos.y += cos(t * 0.4 + aRandom * 15.0) * 2.0;
+  }
   
-  // Box Wrapping: Keep particles within a virtual box
+  // Box Wrapping
   float boxSize = 10.0;
   pos.y = mod(pos.y + boxSize * 0.5, boxSize) - boxSize * 0.5;
   pos.x = mod(pos.x + boxSize * 0.5, boxSize) - boxSize * 0.5;
   
-  // Noise Displacement: Match background feel
-  // We use xy coordinates scaled by density to sample noise
   float noiseVal = fbm(pos.xy * uDensity * uNoiseScale * 0.5 + t * 0.1);
-  
-  // Displace Z based on noise and strength
   pos.z += noiseVal * uStrength * 2.0;
   
   vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
   gl_Position = projectionMatrix * mvPosition;
   
-  // Size Attenuation: Particles further away are smaller
-  // Modulated by noise for "twinkle" effect
   gl_PointSize = aSize * uParticleSize * (1.0 + noiseVal * 0.5) * (15.0 / -mvPosition.z);
+  
+  if (uParticleType == 3) gl_PointSize *= 0.5; // Thinner rain
   
   vAlpha = 0.3 + 0.7 * smoothstep(-1.0, 1.0, noiseVal);
 }
 `;
 
 export const PARTICLE_FRAGMENT_SHADER = `
-uniform vec3 uColor1;
-uniform vec3 uColor2;
-uniform vec3 uColor3;
+uniform vec3 uParticleColor1;
+uniform vec3 uParticleColor2;
 uniform float uParticleOpacity;
 
 varying float vAlpha;
@@ -1359,8 +1492,8 @@ void main() {
   float alpha = smoothstep(0.5, 0.0, dist);
   
   // Color mixing based on radius (center is hotter/different color)
-  vec3 color = mix(uColor1, uColor2, vAlpha);
-  color = mix(color, uColor3, dist * 2.0); // Highlight centers
+  vec3 color = mix(uParticleColor1, uParticleColor2, vAlpha);
+  color = mix(color, vec3(1.0), smoothstep(0.2, 0.0, dist)); // Highlight centers
   
   gl_FragColor = vec4(color, alpha * vAlpha * uParticleOpacity);
 }
@@ -1375,4 +1508,157 @@ export const hexToRgb = (hex: string): [number, number, number] => {
         parseInt(result[3], 16) / 255,
       ]
     : [0, 0, 0];
+};
+
+export const generateStandaloneShader = (config: ShaderConfig): string => {
+  const { colors, particleColor1, particleColor2 } = config;
+  const c1 = hexToRgb(colors[0]);
+  const c2 = hexToRgb(colors[1]);
+  const c3 = hexToRgb(colors[2]);
+
+  return `// Shader Studio Export - Standalone GLSL
+// High compatibility template for Shadertoy and other editors
+
+#ifdef GL_ES
+precision highp float;
+#endif
+
+// Mapping Uniforms to Shadertoy built-ins
+uniform float iTime;
+uniform vec2 iResolution;
+uniform vec2 iMouse;
+uniform sampler2D iChannel0; // For post-processing effects if needed
+
+// We map original app variable names to Shadertoy built-ins
+#define uTime iTime
+#define tDiffuse iChannel0
+vec2 vUv;
+vec4 gl_FragColor;
+
+// Original App Uniforms (Baked values)
+const vec3 uColor1 = vec3(${c1[0].toFixed(3)}, ${c1[1].toFixed(
+    3
+  )}, ${c1[2].toFixed(3)});
+const vec3 uColor2 = vec3(${c2[0].toFixed(3)}, ${c2[1].toFixed(
+    3
+  )}, ${c2[2].toFixed(3)});
+const vec3 uColor3 = vec3(${c3[0].toFixed(3)}, ${c3[1].toFixed(
+    3
+  )}, ${c3[2].toFixed(3)});
+const float uSpeed = ${config.speed.toFixed(3)};
+const float uDensity = ${config.density.toFixed(3)};
+const float uStrength = ${config.strength.toFixed(3)};
+const float uHue = ${config.hue.toFixed(3)};
+const float uSaturation = ${config.saturation.toFixed(3)};
+const float uBrightness = ${config.brightness.toFixed(3)};
+const float uNoiseScale = ${config.noiseScale.toFixed(3)};
+const int uNoiseOctaves = ${config.noiseOctaves};
+const float uNoisePersistence = ${config.noisePersistence.toFixed(3)};
+const float uDistortion = ${config.distortion.toFixed(3)};
+const float uWarp = ${config.warp.toFixed(3)};
+const float uGrain = ${config.grain.toFixed(3)};
+const float uPixelation = ${config.pixelation.toFixed(3)};
+const float uContrast = ${config.contrast.toFixed(3)};
+const float uExposure = ${config.exposure.toFixed(3)};
+const float uSharpness = ${config.sharpness.toFixed(3)};
+const float uVignette = ${config.vignette.toFixed(3)};
+const float uChromaticAberration = ${config.chromaticAberration.toFixed(3)};
+const float uGlow = ${config.glow.toFixed(3)};
+const float uBloomThreshold = ${config.bloomThreshold.toFixed(3)};
+const float uQuantization = ${config.quantization.toFixed(3)};
+const float uScanlines = ${config.scanlines.toFixed(3)};
+const float uRotation = ${config.rotation.toFixed(3)};
+const float uZoom = ${config.zoom.toFixed(3)};
+const float uTimeOffset = ${config.timeOffset.toFixed(3)};
+const float uGamma = ${config.gamma.toFixed(3)};
+const float uEmboss = ${config.emboss.toFixed(3)};
+
+#define PI 3.14159265359
+
+// Basic Utils
+vec2 transformUV(vec2 uv) {
+    vec2 centered = uv - 0.5;
+    float s = sin(uRotation);
+    float c = cos(uRotation);
+    mat2 rot = mat2(c, -s, s, c);
+    centered = rot * centered;
+    centered /= uZoom;
+    return centered + 0.5;
+}
+
+vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+  vec2 i  = floor(v + dot(v, C.yy) );
+  vec2 x0 = v -   i + dot(i, C.xx);
+  vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+  vec4 x12 = x0.xyxy + C.xxzz;
+  x12.xy -= i1;
+  i = mod(i, 289.0);
+  vec3 p = permute( permute( i.y + vec3(0.0, i1.y, 1.0 )) + i.x + vec3(0.0, i1.x, 1.0 ));
+  vec3 m = max(0.5 - vec3(dot(x0,x0), dot(x12.xy,x12.xy), dot(x12.zw,x12.zw)), 0.0);
+  m = m*m ; m = m*m ;
+  vec3 x = 2.0 * fract(p * C.www) - 1.0;
+  vec3 h = abs(x) - 0.5;
+  vec3 ox = floor(x + 0.5);
+  vec3 a0 = x - ox;
+  m *= 1.79284291400159 - 0.85373472095314 * ( a0*a0 + h*h );
+  vec3 g;
+  g.x  = a0.x  * x0.x  + h.x  * x0.y;
+  g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+  return 130.0 * dot(m, g);
+}
+float fbm(vec2 st) {
+    float value = 0.0;
+    float amplitude = 0.5;
+    for (int i = 0; i < 5; i++) {
+        if (i >= uNoiseOctaves) break;
+        value += amplitude * snoise(st);
+        st *= 2.0;
+        amplitude *= uNoisePersistence;
+    }
+    return value;
+}
+vec3 hueShift(vec3 color, float hue) {
+    const vec3 k = vec3(0.57735, 0.57735, 0.57735);
+    float cosAngle = cos(hue);
+    return vec3(color * cosAngle + cross(k, color) * sin(hue) + k * dot(k, color) * (1.0 - cosAngle));
+}
+vec3 applyCorrections(vec3 color) {
+    color *= pow(2.0, uExposure);
+    if (uHue != 0.0) color = hueShift(color, uHue);
+    if (uSaturation != 1.0) {
+        float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+        color = mix(vec3(luminance), color, uSaturation);
+    }
+    color = color * uBrightness;
+    color = (color - 0.5) * uContrast + 0.5;
+    return clamp(color, 0.0, 1.0);
+}
+
+// Post-effects stub as we don't have multi-pass in standalone easily
+vec3 applyPostEffects(vec3 color, vec2 uv) {
+    if (uVignette > 0.0) {
+        float d = length(uv - 0.5);
+        color *= smoothstep(0.8, 0.2 * (1.0 - uVignette), d);
+    }
+    if (uGamma > 0.0 && uGamma != 1.0) {
+        color = pow(color, vec3(1.0 / uGamma));
+    }
+    return color;
+}
+
+// MAIN SHADER LOGIC
+${config.fragmentShader
+  .replace(/\${COMMON_UNIFORMS_AND_UTILS}/g, "")
+  .replace(/void main\(\) {/g, "void main_app() {")}
+
+// Shadertoy / Generic Entry Point
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    vUv = fragCoord/iResolution.xy;
+    main_app(); 
+    fragColor = gl_FragColor;
+}
+`;
 };

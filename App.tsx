@@ -3,7 +3,12 @@ import ShaderCanvas from "./components/ShaderCanvas";
 import Controls from "./components/Controls";
 import AIPanel from "./components/AIPanel";
 import CodeEditor from "./components/CodeModal";
-import { ShaderConfig, GeneratorStatus, GradientType } from "./types";
+import {
+  ShaderConfig,
+  GeneratorStatus,
+  GradientType,
+  ParticleType,
+} from "./types";
 import { DEFAULT_FRAGMENT_SHADER } from "./utils/shaderUtils";
 import { generateShaderCode } from "./services/geminiService";
 import { useHistoryState } from "./hooks/useHistoryState";
@@ -45,6 +50,11 @@ const DEFAULT_CONFIG: ShaderConfig = {
   zoom: 0.3,
   timeOffset: 0.0,
   gradientType: GradientType.NOISE,
+  particleType: ParticleType.STAR,
+  particleColor1: "#ffffff",
+  particleColor2: "#4f46e5",
+  bloomIntensity: 0.5,
+  bloomRadius: 0.4,
 };
 
 const App: React.FC = () => {
@@ -161,6 +171,7 @@ const App: React.FC = () => {
         onClose={() => setShowEditor(false)}
         code={config.fragmentShader}
         onChange={handleCodeChange}
+        config={config}
       />
 
       {/* Overlay Status Toast */}

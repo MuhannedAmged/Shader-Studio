@@ -10,6 +10,7 @@ import {
   FOG_FRAGMENT_SHADER,
   hexToRgb,
 } from "../utils/shaderUtils";
+import { ParticleType } from "../types";
 
 // Bypass TypeScript intrinsic element checks for R3F primitives by aliasing them
 const Mesh = "mesh" as any;
@@ -72,6 +73,8 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
       uScanlines: { value: config.scanlines },
       uGamma: { value: config.gamma },
       uEmboss: { value: config.emboss },
+      uBloomIntensity: { value: config.bloomIntensity },
+      uBloomRadius: { value: config.bloomRadius },
       uRotation: { value: config.rotation },
       uZoom: { value: config.zoom },
       uTimeOffset: { value: config.timeOffset },
@@ -121,6 +124,9 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
       materialRef.current.uniforms.uScanlines.value = config.scanlines;
       materialRef.current.uniforms.uGamma.value = config.gamma;
       materialRef.current.uniforms.uEmboss.value = config.emboss;
+      materialRef.current.uniforms.uBloomIntensity.value =
+        config.bloomIntensity;
+      materialRef.current.uniforms.uBloomRadius.value = config.bloomRadius;
       materialRef.current.uniforms.uRotation.value = config.rotation;
       materialRef.current.uniforms.uZoom.value = config.zoom;
       materialRef.current.uniforms.uTimeOffset.value = config.timeOffset;
@@ -342,6 +348,15 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
       uParticleSize: { value: config.particleSize },
       uParticleSpeed: { value: config.particleSpeed },
       uParticleOpacity: { value: config.particleOpacity },
+      uParticleType: {
+        value: Object.values(ParticleType).indexOf(config.particleType),
+      },
+      uParticleColor1: {
+        value: new THREE.Color(...hexToRgb(config.particleColor1)),
+      },
+      uParticleColor2: {
+        value: new THREE.Color(...hexToRgb(config.particleColor2)),
+      },
     }),
     []
   );
@@ -369,6 +384,15 @@ const ParticleSystem: React.FC<ShaderMeshProps> = ({
       materialRef.current.uniforms.uParticleSpeed.value = config.particleSpeed;
       materialRef.current.uniforms.uParticleOpacity.value =
         config.particleOpacity;
+      materialRef.current.uniforms.uParticleType.value = Object.values(
+        ParticleType
+      ).indexOf(config.particleType);
+      materialRef.current.uniforms.uParticleColor1.value.set(
+        ...hexToRgb(config.particleColor1)
+      );
+      materialRef.current.uniforms.uParticleColor2.value.set(
+        ...hexToRgb(config.particleColor2)
+      );
     }
   }, [config]);
 
@@ -408,21 +432,24 @@ interface ShaderCanvasProps {
 
 const SceneContent: React.FC<ShaderCanvasProps> = (props) => {
   const { size, gl } = useThree();
+  const hasBlur = props.config.blurStrength > 0;
 
-  // Create render target for background
+  // Create render target for background only if needed
   const target = useMemo(() => {
     return new THREE.WebGLRenderTarget(size.width, size.height, {
       minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
-      type: THREE.FloatType, // High precision
+      type: THREE.HalfFloatType, // Half float is usually enough and faster
     });
   }, [size.width, size.height]);
 
   // Resize target on window resize
   useEffect(() => {
-    target.setSize(size.width, size.height);
-  }, [size, target]);
+    if (hasBlur) {
+      target.setSize(size.width, size.height);
+    }
+  }, [size, target, hasBlur]);
 
   // Cleanup
   useEffect(() => {
@@ -438,23 +465,30 @@ const SceneContent: React.FC<ShaderCanvasProps> = (props) => {
 
   return (
     <>
-      <BackgroundRenderer {...props} target={target} />
-      <BlurMesh
-        texture={target.texture}
-        blurStrength={props.config.blurStrength}
-      />
+      {hasBlur ? (
+        <>
+          <BackgroundRenderer {...props} target={target} />
+          <BlurMesh
+            texture={target.texture}
+            blurStrength={props.config.blurStrength}
+          />
+        </>
+      ) : (
+        <ShaderMesh
+          config={props.config}
+          isPaused={props.isPaused}
+          resetTimeSignal={props.resetTimeSignal}
+          manualTime={props.manualTime}
+        />
+      )}
+
       <FogLayer
         config={props.config}
         isPaused={props.isPaused}
         resetTimeSignal={props.resetTimeSignal}
         manualTime={props.manualTime}
       />
-      <ShaderMesh
-        config={props.config}
-        isPaused={props.isPaused}
-        resetTimeSignal={props.resetTimeSignal}
-        manualTime={props.manualTime}
-      />
+
       {props.config.showParticles && (
         <ParticleSystem
           config={props.config}

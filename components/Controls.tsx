@@ -28,7 +28,7 @@ import {
   Loader2,
   Image as ImageIcon,
 } from "lucide-react";
-import { ShaderConfig, GradientType } from "../types";
+import { ShaderConfig, GradientType, ParticleType } from "../types";
 import { hexToRgb, getFragmentShader } from "../utils/shaderUtils";
 import { exportToGIF } from "../services/gifService";
 import { exportToVideo } from "../services/videoService";
@@ -935,6 +935,73 @@ const Controls: React.FC<ControlsProps> = ({
                       className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-indigo-400"
                     />
                   </div>
+
+                  {/* Particle Type */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 uppercase tracking-wider">
+                      Type
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {Object.values(ParticleType).map((type) => (
+                        <button
+                          key={type}
+                          onClick={() =>
+                            onChange({ ...config, particleType: type })
+                          }
+                          className={`h-7 text-[8px] font-bold rounded-md border transition-all ${
+                            config.particleType === type
+                              ? "bg-indigo-500 text-white border-indigo-400"
+                              : "bg-white/5 text-gray-400 border-white/5 hover:bg-white/10"
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Particle Colors */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-gray-500 uppercase tracking-wider">
+                      Colors
+                    </label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 h-8 rounded-lg relative overflow-hidden border border-white/10">
+                        <input
+                          type="color"
+                          value={config.particleColor1}
+                          onChange={(e) =>
+                            onChange({
+                              ...config,
+                              particleColor1: e.target.value,
+                            })
+                          }
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: config.particleColor1 }}
+                        />
+                      </div>
+                      <div className="flex-1 h-8 rounded-lg relative overflow-hidden border border-white/10">
+                        <input
+                          type="color"
+                          value={config.particleColor2}
+                          onChange={(e) =>
+                            onChange({
+                              ...config,
+                              particleColor2: e.target.value,
+                            })
+                          }
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        />
+                        <div
+                          className="w-full h-full"
+                          style={{ backgroundColor: config.particleColor2 }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -993,6 +1060,51 @@ const Controls: React.FC<ControlsProps> = ({
               <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
                 <Sliders className="w-3 h-3" /> Corrections
               </label>
+
+              {/* Bloom */}
+              <div className="space-y-4 pt-4 border-t border-white/5">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-400">Bloom Intensity</span>
+                  <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
+                    {config.bloomIntensity.toFixed(2)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="2.0"
+                  step="0.01"
+                  value={config.bloomIntensity}
+                  onChange={(e) =>
+                    handleSliderChange(
+                      "bloomIntensity",
+                      parseFloat(e.target.value)
+                    )
+                  }
+                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500 transition-all"
+                />
+
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-gray-400">Bloom Radius</span>
+                  <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
+                    {config.bloomRadius.toFixed(2)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min="0.0"
+                  max="1.0"
+                  step="0.01"
+                  value={config.bloomRadius}
+                  onChange={(e) =>
+                    handleSliderChange(
+                      "bloomRadius",
+                      parseFloat(e.target.value)
+                    )
+                  }
+                  className="w-full h-1.5 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-yellow-500 transition-all"
+                />
+              </div>
 
               {/* Hue */}
               <div className="space-y-3">
