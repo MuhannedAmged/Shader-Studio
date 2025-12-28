@@ -19,7 +19,9 @@ const GeometryControls: React.FC<GeometryControlsProps> = ({
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Density</span>
+          <span className="text-xs text-gray-400" id="label-density">
+            Density
+          </span>
           <span className="text-xs font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
             {config.density.toFixed(1)}
           </span>
@@ -30,6 +32,7 @@ const GeometryControls: React.FC<GeometryControlsProps> = ({
           max="10"
           step="0.1"
           value={config.density}
+          aria-labelledby="label-density"
           onChange={(e) =>
             handleSliderChange("density", parseFloat(e.target.value))
           }
@@ -39,7 +42,9 @@ const GeometryControls: React.FC<GeometryControlsProps> = ({
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Strength</span>
+          <span className="text-xs text-gray-400" id="label-strength">
+            Strength
+          </span>
           <span className="text-xs font-mono text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded">
             {config.strength.toFixed(2)}
           </span>
@@ -50,6 +55,7 @@ const GeometryControls: React.FC<GeometryControlsProps> = ({
           max="2"
           step="0.01"
           value={config.strength}
+          aria-labelledby="label-strength"
           onChange={(e) =>
             handleSliderChange("strength", parseFloat(e.target.value))
           }

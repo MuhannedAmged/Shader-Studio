@@ -63,6 +63,8 @@ const ExportControls: React.FC<ExportControlsProps> = ({
       <div className="flex items-center justify-between px-1">
         <button
           onClick={() => setShowGifSettings(!showGifSettings)}
+          aria-expanded={showGifSettings}
+          aria-label="Toggle Export Settings"
           className="text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-indigo-400 transition-colors flex items-center gap-1.5"
         >
           <Settings
@@ -85,9 +87,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
             <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
               Format
             </label>
-            <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5">
+            <div
+              className="flex bg-black/40 border border-white/10 rounded-lg p-0.5"
+              role="group"
+              aria-label="Export Format"
+            >
               <button
                 onClick={() => setExportFormat("gif")}
+                aria-pressed={exportFormat === "gif"}
                 className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
                   exportFormat === "gif"
                     ? "bg-indigo-500 text-white shadow-lg"
@@ -98,6 +105,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               </button>
               <button
                 onClick={() => setExportFormat("video")}
+                aria-pressed={exportFormat === "video"}
                 className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
                   exportFormat === "video"
                     ? "bg-indigo-500 text-white shadow-lg"
@@ -108,6 +116,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               </button>
               <button
                 onClick={() => setExportFormat("image")}
+                aria-pressed={exportFormat === "image"}
                 className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
                   exportFormat === "image"
                     ? "bg-indigo-500 text-white shadow-lg"
@@ -121,10 +130,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
 
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1.5">
-              <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+              <label
+                htmlFor="export-width"
+                className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1"
+              >
                 Width
               </label>
               <input
+                id="export-width"
                 type="number"
                 value={gifWidth}
                 onChange={(e) =>
@@ -139,10 +152,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+              <label
+                htmlFor="export-height"
+                className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1"
+              >
                 Height
               </label>
               <input
+                id="export-height"
                 type="number"
                 value={gifHeight}
                 onChange={(e) =>
@@ -165,9 +182,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                 <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
                   Format Type
                 </label>
-                <div className="flex bg-black/40 border border-white/10 rounded-lg p-0.5">
+                <div
+                  className="flex bg-black/40 border border-white/10 rounded-lg p-0.5"
+                  role="group"
+                  aria-label="Image Format"
+                >
                   <button
                     onClick={() => setImageFormat("png")}
+                    aria-pressed={imageFormat === "png"}
                     className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
                       imageFormat === "png"
                         ? "bg-indigo-500 text-white shadow-lg"
@@ -178,6 +200,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                   </button>
                   <button
                     onClick={() => setImageFormat("jpg")}
+                    aria-pressed={imageFormat === "jpg"}
                     className={`flex-1 py-1 text-[10px] font-medium rounded-md transition-all ${
                       imageFormat === "jpg"
                         ? "bg-indigo-500 text-white shadow-lg"
@@ -192,7 +215,10 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               {imageFormat === "jpg" && (
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center ml-1">
-                    <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold">
+                    <label
+                      id="image-quality-label"
+                      className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold"
+                    >
                       Quality
                     </label>
                     <span className="text-[9px] font-mono text-indigo-300">
@@ -205,6 +231,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                     max="1"
                     step="0.1"
                     value={imageQuality}
+                    aria-labelledby="image-quality-label"
                     onChange={(e) =>
                       setImageQuality(parseFloat(e.target.value))
                     }
@@ -221,10 +248,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               <div className="grid grid-cols-2 gap-2">
                 {exportFormat === "gif" && (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                    <label
+                      htmlFor="gif-quality"
+                      className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1"
+                    >
                       Quality
                     </label>
                     <select
+                      id="gif-quality"
                       value={gifQuality}
                       onChange={(e) => setGifQuality(parseInt(e.target.value))}
                       className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
@@ -237,10 +268,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                   </div>
                 )}
                 <div className="space-y-1.5">
-                  <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                  <label
+                    htmlFor="fps-select"
+                    className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1"
+                  >
                     FPS
                   </label>
                   <select
+                    id="fps-select"
                     value={gifFPS}
                     onChange={(e) => setGifFPS(parseInt(e.target.value))}
                     className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
@@ -253,10 +288,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
+                <label
+                  htmlFor="duration-select"
+                  className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1"
+                >
                   Duration
                 </label>
                 <select
+                  id="duration-select"
                   value={gifDuration}
                   onChange={(e) => setGifDuration(parseInt(e.target.value))}
                   className="w-full bg-black/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-indigo-300 focus:outline-none focus:border-indigo-500/50 transition-colors"
@@ -273,9 +312,14 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                 <label className="text-[9px] uppercase tracking-tighter text-gray-500 font-bold ml-1">
                   Loop Type
                 </label>
-                <div className="flex bg-black/40 border border-white/10 rounded-lg p-1 gap-1">
+                <div
+                  className="flex bg-black/40 border border-white/10 rounded-lg p-1 gap-1"
+                  role="group"
+                  aria-label="Loop Type"
+                >
                   <button
                     onClick={() => setGifLoopType("normal")}
+                    aria-pressed={gifLoopType === "normal"}
                     className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
                       gifLoopType === "normal"
                         ? "bg-indigo-500 text-white shadow-sm"
@@ -286,6 +330,7 @@ const ExportControls: React.FC<ExportControlsProps> = ({
                   </button>
                   <button
                     onClick={() => setGifLoopType("pingpong")}
+                    aria-pressed={gifLoopType === "pingpong"}
                     className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-all ${
                       gifLoopType === "pingpong"
                         ? "bg-indigo-500 text-white shadow-sm"

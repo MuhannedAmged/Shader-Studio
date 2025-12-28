@@ -20,7 +20,9 @@ const DistortionControls: React.FC<DistortionControlsProps> = ({
       {/* Distortion */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Distortion</span>
+          <span className="text-xs text-gray-400" id="label-distortion">
+            Distortion
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {config.distortion.toFixed(2)}
           </span>
@@ -31,6 +33,7 @@ const DistortionControls: React.FC<DistortionControlsProps> = ({
           max="5.0"
           step="0.1"
           value={config.distortion}
+          aria-labelledby="label-distortion"
           onChange={(e) =>
             handleSliderChange("distortion", parseFloat(e.target.value))
           }
@@ -41,7 +44,9 @@ const DistortionControls: React.FC<DistortionControlsProps> = ({
       {/* Warp */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Warp</span>
+          <span className="text-xs text-gray-400" id="label-warp">
+            Warp
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {config.warp.toFixed(2)}
           </span>
@@ -52,6 +57,7 @@ const DistortionControls: React.FC<DistortionControlsProps> = ({
           max="5.0"
           step="0.1"
           value={config.warp}
+          aria-labelledby="label-warp"
           onChange={(e) =>
             handleSliderChange("warp", parseFloat(e.target.value))
           }

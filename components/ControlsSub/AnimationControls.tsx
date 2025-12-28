@@ -52,7 +52,9 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
       {/* Speed Slider */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Speed</span>
+          <span className="text-xs text-gray-400" id="label-speed">
+            Speed
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {config.speed.toFixed(2)}
           </span>
@@ -64,6 +66,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
             max="2"
             step="0.1"
             value={config.speed}
+            aria-labelledby="label-speed"
             onChange={(e) =>
               handleSliderChange("speed", parseFloat(e.target.value))
             }
@@ -77,7 +80,9 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
       {/* Rotation Slider */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Rotation</span>
+          <span className="text-xs text-gray-400" id="label-rotation">
+            Rotation
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {(config.rotation / Math.PI).toFixed(2)}π
           </span>
@@ -88,6 +93,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           max={Math.PI * 2}
           step="0.01"
           value={config.rotation}
+          aria-labelledby="label-rotation"
           onChange={(e) =>
             handleSliderChange("rotation", parseFloat(e.target.value))
           }
@@ -98,7 +104,9 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
       {/* Zoom Slider */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Zoom</span>
+          <span className="text-xs text-gray-400" id="label-zoom">
+            Zoom
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {config.zoom.toFixed(2)}x
           </span>
@@ -109,6 +117,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           max="5.0"
           step="0.1"
           value={config.zoom}
+          aria-labelledby="label-zoom"
           onChange={(e) =>
             handleSliderChange("zoom", parseFloat(e.target.value))
           }
@@ -119,7 +128,9 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
       {/* Time Offset Slider */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Time Offset</span>
+          <span className="text-xs text-gray-400" id="label-time-offset">
+            Time Offset
+          </span>
           <span className="text-xs font-mono text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
             {config.timeOffset.toFixed(1)}s
           </span>
@@ -130,6 +141,7 @@ const AnimationControls: React.FC<AnimationControlsProps> = ({
           max="100"
           step="1"
           value={config.timeOffset}
+          aria-labelledby="label-time-offset"
           onChange={(e) =>
             handleSliderChange("timeOffset", parseFloat(e.target.value))
           }

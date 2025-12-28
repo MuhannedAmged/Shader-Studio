@@ -271,7 +271,9 @@ const Controls: React.FC<ControlsProps> = ({
       </button>
 
       {/* Main Panel */}
-      <div
+      <aside
+        aria-label="Shader Controls"
+        aria-hidden={!isVisible}
         className={`controls fixed top-0 left-0 h-full w-full sm:w-80 max-w-[100vw] p-4 sm:p-6 flex flex-col z-30 transition-transform duration-300 ease-out pointer-events-none ${
           isVisible ? "translate-x-0" : "-translate-x-full"
         }`}
@@ -381,7 +383,7 @@ const Controls: React.FC<ControlsProps> = ({
         <div className="mt-4 text-[10px] text-gray-600 text-center font-mono">
           v1.5.0
         </div>
-      </div>
+      </aside>
     </>
   );
 };

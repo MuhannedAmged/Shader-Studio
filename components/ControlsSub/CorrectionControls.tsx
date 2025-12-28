@@ -20,7 +20,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Bloom */}
       <div className="space-y-4 pt-4 border-t border-white/5">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Bloom Intensity</span>
+          <span className="text-xs text-gray-400" id="label-bloom-intensity">
+            Bloom Intensity
+          </span>
           <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
             {config.bloomIntensity.toFixed(2)}
           </span>
@@ -31,6 +33,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2.0"
           step="0.01"
           value={config.bloomIntensity}
+          aria-labelledby="label-bloom-intensity"
           onChange={(e) =>
             handleSliderChange("bloomIntensity", parseFloat(e.target.value))
           }
@@ -38,7 +41,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
         />
 
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Bloom Radius</span>
+          <span className="text-xs text-gray-400" id="label-bloom-radius">
+            Bloom Radius
+          </span>
           <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
             {config.bloomRadius.toFixed(2)}
           </span>
@@ -49,6 +54,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="1.0"
           step="0.01"
           value={config.bloomRadius}
+          aria-labelledby="label-bloom-radius"
           onChange={(e) =>
             handleSliderChange("bloomRadius", parseFloat(e.target.value))
           }
@@ -59,7 +65,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Hue */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Hue Shift</span>
+          <span className="text-xs text-gray-400" id="label-hue">
+            Hue Shift
+          </span>
           <span className="text-xs font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded">
             {(config.hue / Math.PI).toFixed(2)}π
           </span>
@@ -70,6 +78,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max={Math.PI * 2}
           step="0.1"
           value={config.hue}
+          aria-labelledby="label-hue"
           onChange={(e) =>
             handleSliderChange("hue", parseFloat(e.target.value))
           }
@@ -80,7 +89,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Saturation */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Saturation</span>
+          <span className="text-xs text-gray-400" id="label-saturation">
+            Saturation
+          </span>
           <span className="text-xs font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
             {config.saturation.toFixed(2)}
           </span>
@@ -91,6 +102,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2"
           step="0.05"
           value={config.saturation}
+          aria-labelledby="label-saturation"
           onChange={(e) =>
             handleSliderChange("saturation", parseFloat(e.target.value))
           }
@@ -101,7 +113,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Brightness */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Brightness</span>
+          <span className="text-xs text-gray-400" id="label-brightness">
+            Brightness
+          </span>
           <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
             {config.brightness.toFixed(2)}
           </span>
@@ -112,6 +126,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2"
           step="0.05"
           value={config.brightness}
+          aria-labelledby="label-brightness"
           onChange={(e) =>
             handleSliderChange("brightness", parseFloat(e.target.value))
           }
@@ -122,7 +137,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Contrast */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Contrast</span>
+          <span className="text-xs text-gray-400" id="label-contrast">
+            Contrast
+          </span>
           <span className="text-xs font-mono text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded">
             {config.contrast.toFixed(2)}
           </span>
@@ -133,6 +150,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2"
           step="0.05"
           value={config.contrast}
+          aria-labelledby="label-contrast"
           onChange={(e) =>
             handleSliderChange("contrast", parseFloat(e.target.value))
           }
@@ -143,7 +161,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Exposure */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Exposure</span>
+          <span className="text-xs text-gray-400" id="label-exposure">
+            Exposure
+          </span>
           <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
             {config.exposure.toFixed(2)}
           </span>
@@ -154,6 +174,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2"
           step="0.05"
           value={config.exposure}
+          aria-labelledby="label-exposure"
           onChange={(e) =>
             handleSliderChange("exposure", parseFloat(e.target.value))
           }
@@ -164,7 +185,9 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
       {/* Sharpness */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Sharpness</span>
+          <span className="text-xs text-gray-400" id="label-sharpness">
+            Sharpness
+          </span>
           <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
             {config.sharpness.toFixed(2)}
           </span>
@@ -175,6 +198,7 @@ const CorrectionControls: React.FC<CorrectionControlsProps> = ({
           max="2"
           step="0.05"
           value={config.sharpness}
+          aria-labelledby="label-sharpness"
           onChange={(e) =>
             handleSliderChange("sharpness", parseFloat(e.target.value))
           }

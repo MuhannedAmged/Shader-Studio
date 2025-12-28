@@ -19,6 +19,8 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
     <div className="space-y-4 pt-6 border-t border-white/10">
       <button
         onClick={() => setShowPostProcessing(!showPostProcessing)}
+        aria-expanded={showPostProcessing}
+        aria-label="Toggle Post-Processing"
         className="w-full flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white transition-colors"
       >
         <div className="flex items-center gap-2">
@@ -36,7 +38,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Vignette */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Vignette</span>
+              <span className="text-xs text-gray-400" id="label-vignette">
+                Vignette
+              </span>
               <span className="text-xs font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
                 {config.vignette.toFixed(2)}
               </span>
@@ -47,6 +51,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.vignette}
+              aria-labelledby="label-vignette"
               onChange={(e) =>
                 handleSliderChange("vignette", parseFloat(e.target.value))
               }
@@ -57,7 +62,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Chromatic Aberration */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400" id="label-chromatic">
                 Chromatic Aberration
               </span>
               <span className="text-xs font-mono text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
@@ -70,6 +75,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.chromaticAberration}
+              aria-labelledby="label-chromatic"
               onChange={(e) =>
                 handleSliderChange(
                   "chromaticAberration",
@@ -83,7 +89,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Glow */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Glow</span>
+              <span className="text-xs text-gray-400" id="label-glow">
+                Glow
+              </span>
               <span className="text-xs font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded">
                 {config.glow.toFixed(2)}
               </span>
@@ -94,6 +102,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="2"
               step="0.05"
               value={config.glow}
+              aria-labelledby="label-glow"
               onChange={(e) =>
                 handleSliderChange("glow", parseFloat(e.target.value))
               }
@@ -104,7 +113,12 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Bloom Threshold */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Bloom Threshold</span>
+              <span
+                className="text-xs text-gray-400"
+                id="label-bloom-threshold"
+              >
+                Bloom Threshold
+              </span>
               <span className="text-xs font-mono text-yellow-200 bg-yellow-500/10 px-2 py-0.5 rounded">
                 {config.bloomThreshold.toFixed(2)}
               </span>
@@ -115,6 +129,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.bloomThreshold}
+              aria-labelledby="label-bloom-threshold"
               onChange={(e) =>
                 handleSliderChange("bloomThreshold", parseFloat(e.target.value))
               }
@@ -125,7 +140,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Quantization */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Quantization</span>
+              <span className="text-xs text-gray-400" id="label-quantization">
+                Quantization
+              </span>
               <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
                 {config.quantization.toFixed(2)}
               </span>
@@ -136,6 +153,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.quantization}
+              aria-labelledby="label-quantization"
               onChange={(e) =>
                 handleSliderChange("quantization", parseFloat(e.target.value))
               }
@@ -146,7 +164,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Scanlines */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Scanlines</span>
+              <span className="text-xs text-gray-400" id="label-scanlines">
+                Scanlines
+              </span>
               <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded">
                 {config.scanlines.toFixed(2)}
               </span>
@@ -157,6 +177,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.scanlines}
+              aria-labelledby="label-scanlines"
               onChange={(e) =>
                 handleSliderChange("scanlines", parseFloat(e.target.value))
               }
@@ -167,7 +188,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Gamma */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Gamma</span>
+              <span className="text-xs text-gray-400" id="label-gamma">
+                Gamma
+              </span>
               <span className="text-xs font-mono text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded">
                 {config.gamma.toFixed(2)}
               </span>
@@ -178,6 +201,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="2.5"
               step="0.05"
               value={config.gamma}
+              aria-labelledby="label-gamma"
               onChange={(e) =>
                 handleSliderChange("gamma", parseFloat(e.target.value))
               }
@@ -188,7 +212,9 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
           {/* Emboss */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-xs text-gray-400">Emboss</span>
+              <span className="text-xs text-gray-400" id="label-emboss">
+                Emboss
+              </span>
               <span className="text-xs font-mono text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded">
                 {config.emboss.toFixed(2)}
               </span>
@@ -199,6 +225,7 @@ const PostProcessingControls: React.FC<PostProcessingControlsProps> = ({
               max="1"
               step="0.01"
               value={config.emboss}
+              aria-labelledby="label-emboss"
               onChange={(e) =>
                 handleSliderChange("emboss", parseFloat(e.target.value))
               }

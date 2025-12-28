@@ -160,6 +160,56 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   const preRef = useRef<HTMLPreElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  // Focus restoration
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement;
+      // Focus textarea on open
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    } else {
+      previousFocusRef.current?.focus();
+    }
+  }, [isOpen]);
+
+  // Handle Escape and Focus Trapping
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && suggestions.length === 0) {
+        onClose();
+      }
+
+      if (e.key === "Tab") {
+        const focusableElements = wrapperRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusableElements) return;
+
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => window.removeEventListener("keydown", handleGlobalKeyDown);
+  }, [isOpen, onClose, suggestions.length]);
 
   useEffect(() => {
     setLocalCode(code);
@@ -380,13 +430,20 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 250, damping: 30 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
             className="fixed top-0 right-0 h-full w-full md:w-[650px] z-[70] flex flex-col bg-[#0a0a0a]/95 border-l border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
+            ref={wrapperRef}
           >
             {/* Header */}
             <div className="px-6 py-5 pb-2 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent">
               <div className="flex items-center justify-between">
                 <div className="flex flex-col">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2.5 tracking-tight">
+                  <h3
+                    id="modal-title"
+                    className="text-sm font-bold text-white flex items-center gap-2.5 tracking-tight"
+                  >
                     <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
                       <Terminal className="w-4 h-4 text-indigo-400" />
                     </div>
@@ -441,6 +498,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
 
                   <button
                     onClick={onClose}
+                    aria-label="Close Editor"
                     className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all text-gray-400"
                   >
                     <X className="w-5 h-5" />
@@ -470,10 +528,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             </div>
 
             {/* Editor Area */}
-            <div
-              className="relative flex-1 bg-[#0d0d0d] overflow-hidden group/editor"
-              ref={wrapperRef}
-            >
+            <div className="relative flex-1 bg-[#0d0d0d] overflow-hidden group/editor">
               {/* Line Numbers */}
               <div
                 ref={lineNumbersRef}
@@ -517,6 +572,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                   {/* Input Layer */}
                   <textarea
                     ref={textareaRef}
+                    id="glsl-editor"
                     value={
                       showShadertoy
                         ? generateStandaloneShader(config)
@@ -529,6 +585,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                     autoCorrect="off"
                     autoCapitalize="off"
                     wrap="off"
+                    aria-label="GLSL Code Editor"
+                    aria-multiline="true"
+                    aria-autocomplete="list"
+                    aria-haspopup="listbox"
+                    aria-expanded={suggestions.length > 0}
+                    aria-activedescendant={
+                      suggestions.length > 0
+                        ? `suggestion-${suggestionIndex}`
+                        : undefined
+                    }
                     className="absolute top-0 left-0 w-full m-0 p-6 font-mono text-[13px] leading-6 bg-transparent text-transparent caret-indigo-400 resize-none focus:outline-none whitespace-pre border-none overflow-hidden"
                     style={{
                       tabSize: 2,
@@ -552,49 +618,58 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                       left: caretCoords.x + "px",
                     }}
                   >
-                    {suggestions.map((suggestion, idx) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => applySuggestion(suggestion)}
-                        className={`px-3 py-2 text-left text-[11px] font-mono rounded-lg transition-all flex items-center justify-between group/item ${
-                          idx === suggestionIndex
-                            ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
-                            : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {APP_UNIFORMS.includes(suggestion) ? (
-                            <Zap
-                              className={`w-3 h-3 ${
+                    <div
+                      role="listbox"
+                      aria-label="Code Suggestions"
+                      className="flex flex-col"
+                    >
+                      {suggestions.map((suggestion, idx) => (
+                        <button
+                          key={suggestion}
+                          id={`suggestion-${idx}`}
+                          role="option"
+                          aria-selected={idx === suggestionIndex}
+                          onClick={() => applySuggestion(suggestion)}
+                          className={`px-3 py-2 text-left text-[11px] font-mono rounded-lg transition-all flex items-center justify-between group/item ${
+                            idx === suggestionIndex
+                              ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+                              : "text-gray-400 hover:bg-white/5 hover:text-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {APP_UNIFORMS.includes(suggestion) ? (
+                              <Zap
+                                className={`w-3 h-3 ${
+                                  idx === suggestionIndex
+                                    ? "text-indigo-200"
+                                    : "text-indigo-500"
+                                }`}
+                              />
+                            ) : (
+                              <Code2
+                                className={`w-3 h-3 ${
+                                  idx === suggestionIndex
+                                    ? "text-gray-200"
+                                    : "text-gray-600"
+                                }`}
+                              />
+                            )}
+                            <span>{suggestion}</span>
+                          </div>
+                          {APP_UNIFORMS.includes(suggestion) && (
+                            <span
+                              className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
                                 idx === suggestionIndex
-                                  ? "text-indigo-200"
-                                  : "text-indigo-500"
+                                  ? "bg-white/20 text-white"
+                                  : "bg-indigo-500/10 text-indigo-400"
                               }`}
-                            />
-                          ) : (
-                            <Code2
-                              className={`w-3 h-3 ${
-                                idx === suggestionIndex
-                                  ? "text-gray-200"
-                                  : "text-gray-600"
-                              }`}
-                            />
+                            >
+                              Uniform
+                            </span>
                           )}
-                          <span>{suggestion}</span>
-                        </div>
-                        {APP_UNIFORMS.includes(suggestion) && (
-                          <span
-                            className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter ${
-                              idx === suggestionIndex
-                                ? "bg-white/20 text-white"
-                                : "bg-indigo-500/10 text-indigo-400"
-                            }`}
-                          >
-                            Uniform
-                          </span>
-                        )}
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
                   </MotionDiv>
                 )}
               </AnimatePresence>

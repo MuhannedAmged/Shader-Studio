@@ -22,7 +22,9 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
       {/* Blur */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Blur</span>
+          <span className="text-xs text-gray-400" id="label-blur">
+            Blur
+          </span>
           <span className="text-xs font-mono text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded">
             {config.blurStrength.toFixed(2)}
           </span>
@@ -33,6 +35,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           max="2.0"
           step="0.05"
           value={config.blurStrength}
+          aria-labelledby="label-blur"
           onChange={(e) =>
             handleSliderChange("blurStrength", parseFloat(e.target.value))
           }
@@ -43,7 +46,9 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
       {/* Grain */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Grain</span>
+          <span className="text-xs text-gray-400" id="label-grain">
+            Grain
+          </span>
           <span className="text-xs font-mono text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded">
             {config.grain.toFixed(2)}
           </span>
@@ -54,6 +59,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           max="1.0"
           step="0.01"
           value={config.grain}
+          aria-labelledby="label-grain"
           onChange={(e) =>
             handleSliderChange("grain", parseFloat(e.target.value))
           }
@@ -64,7 +70,9 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
       {/* Pixelation */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Pixelation</span>
+          <span className="text-xs text-gray-400" id="label-pixelation">
+            Pixelation
+          </span>
           <span className="text-xs font-mono text-gray-400 bg-gray-500/10 px-2 py-0.5 rounded">
             {config.pixelation.toFixed(2)}
           </span>
@@ -75,6 +83,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           max="1.0"
           step="0.01"
           value={config.pixelation}
+          aria-labelledby="label-pixelation"
           onChange={(e) =>
             handleSliderChange("pixelation", parseFloat(e.target.value))
           }
@@ -92,6 +101,8 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
               showParticles: !config.showParticles,
             })
           }
+          aria-label="Toggle Particles"
+          aria-pressed={config.showParticles}
           className={`w-10 h-5 rounded-full transition-colors relative ${
             config.showParticles ? "bg-indigo-500" : "bg-gray-700"
           }`}
@@ -109,7 +120,12 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           {/* Particle Size */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-gray-500">Size</span>
+              <span
+                className="text-[10px] text-gray-500"
+                id="label-particle-size"
+              >
+                Size
+              </span>
               <span className="text-[10px] font-mono text-gray-400">
                 {config.particleSize.toFixed(1)}
               </span>
@@ -120,6 +136,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
               max="5.0"
               step="0.1"
               value={config.particleSize}
+              aria-labelledby="label-particle-size"
               onChange={(e) =>
                 handleSliderChange("particleSize", parseFloat(e.target.value))
               }
@@ -130,7 +147,12 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           {/* Particle Speed */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-gray-500">Speed</span>
+              <span
+                className="text-[10px] text-gray-500"
+                id="label-particle-speed"
+              >
+                Speed
+              </span>
               <span className="text-[10px] font-mono text-gray-400">
                 {config.particleSpeed.toFixed(1)}
               </span>
@@ -141,6 +163,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
               max="5.0"
               step="0.1"
               value={config.particleSpeed}
+              aria-labelledby="label-particle-speed"
               onChange={(e) =>
                 handleSliderChange("particleSpeed", parseFloat(e.target.value))
               }
@@ -151,7 +174,12 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           {/* Particle Count */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-gray-500">Count</span>
+              <span
+                className="text-[10px] text-gray-500"
+                id="label-particle-count"
+              >
+                Count
+              </span>
               <span className="text-[10px] font-mono text-gray-400">
                 {config.particleCount}
               </span>
@@ -162,6 +190,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
               max="5000"
               step="100"
               value={config.particleCount}
+              aria-labelledby="label-particle-count"
               onChange={(e) =>
                 handleSliderChange("particleCount", parseInt(e.target.value))
               }
@@ -172,7 +201,12 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
           {/* Particle Opacity */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-[10px] text-gray-500">Opacity</span>
+              <span
+                className="text-[10px] text-gray-500"
+                id="label-particle-opacity"
+              >
+                Opacity
+              </span>
               <span className="text-[10px] font-mono text-gray-400">
                 {config.particleOpacity.toFixed(2)}
               </span>
@@ -183,6 +217,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
               max="1.0"
               step="0.01"
               value={config.particleOpacity}
+              aria-labelledby="label-particle-opacity"
               onChange={(e) =>
                 handleSliderChange(
                   "particleOpacity",
@@ -225,6 +260,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
                 <input
                   type="color"
                   value={config.particleColor1}
+                  aria-label="Particle Color 1"
                   onChange={(e) =>
                     onChange({
                       ...config,
@@ -242,6 +278,7 @@ const EffectsControls: React.FC<EffectsControlsProps> = ({
                 <input
                   type="color"
                   value={config.particleColor2}
+                  aria-label="Particle Color 2"
                   onChange={(e) =>
                     onChange({
                       ...config,

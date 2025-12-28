@@ -27,7 +27,9 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
       {/* Scale */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Scale</span>
+          <span className="text-xs text-gray-400" id="label-noise-scale-detail">
+            Scale
+          </span>
           <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">
             {config.noiseScale.toFixed(2)}
           </span>
@@ -38,6 +40,7 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
           max="5.0"
           step="0.1"
           value={config.noiseScale}
+          aria-labelledby="label-noise-scale-detail"
           onChange={(e) =>
             onSliderChange("noiseScale", parseFloat(e.target.value))
           }
@@ -48,7 +51,12 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
       {/* Octaves */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Octaves</span>
+          <span
+            className="text-xs text-gray-400"
+            id="label-noise-octaves-detail"
+          >
+            Octaves
+          </span>
           <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">
             {config.noiseOctaves}
           </span>
@@ -59,6 +67,7 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
           max="8"
           step="1"
           value={config.noiseOctaves}
+          aria-labelledby="label-noise-octaves-detail"
           onChange={(e) =>
             onSliderChange("noiseOctaves", parseFloat(e.target.value))
           }
@@ -69,7 +78,12 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
       {/* Persistence */}
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-400">Persistence</span>
+          <span
+            className="text-xs text-gray-400"
+            id="label-noise-persistence-detail"
+          >
+            Persistence
+          </span>
           <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded">
             {config.noisePersistence.toFixed(2)}
           </span>
@@ -80,6 +94,7 @@ const NoiseDetailControls: React.FC<NoiseDetailControlsProps> = ({
           max="1.0"
           step="0.05"
           value={config.noisePersistence}
+          aria-labelledby="label-noise-persistence-detail"
           onChange={(e) =>
             onSliderChange("noisePersistence", parseFloat(e.target.value))
           }

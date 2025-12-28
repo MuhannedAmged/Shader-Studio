@@ -124,7 +124,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black text-white font-sans selection:bg-indigo-500/30">
+    <main className="relative w-full h-screen overflow-hidden bg-black text-white font-sans selection:bg-indigo-500/30">
       {/* Background Shader */}
       <ShaderCanvas
         config={config}
@@ -163,16 +163,24 @@ const App: React.FC = () => {
 
       {/* Overlay Status Toast */}
       {status === GeneratorStatus.SUCCESS && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-green-500/20 backdrop-blur-md border border-green-500/30 text-green-200 text-xs font-medium rounded-full animate-slide-down pointer-events-none z-50">
+        <div
+          role="status"
+          aria-live="polite"
+          className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-green-500/20 backdrop-blur-md border border-green-500/30 text-green-200 text-xs font-medium rounded-full animate-slide-down pointer-events-none z-50"
+        >
           Shader generated successfully
         </div>
       )}
       {status === GeneratorStatus.ERROR && (
-        <div className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-500/20 backdrop-blur-md border border-red-500/30 text-red-200 text-xs font-medium rounded-full animate-slide-down pointer-events-none z-50">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="absolute top-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-red-500/20 backdrop-blur-md border border-red-500/30 text-red-200 text-xs font-medium rounded-full animate-slide-down pointer-events-none z-50"
+        >
           Failed to generate shader
         </div>
       )}
-    </div>
+    </main>
   );
 };
 

@@ -21,6 +21,7 @@ const PatternType: React.FC<PatternTypeProps> = ({
           <button
             key={type}
             onClick={() => handleTypeChange(type)}
+            aria-pressed={config.gradientType === type}
             className={`h-8 text-[8px] font-bold rounded-lg border transition-all truncate px-1 ${
               config.gradientType === type
                 ? "bg-indigo-500 text-white border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.3)]"

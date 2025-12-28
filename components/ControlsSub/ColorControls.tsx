@@ -69,6 +69,7 @@ const ColorControls: React.FC<ColorControlsProps> = ({
             <input
               type="color"
               value={color}
+              aria-label={`Color ${i + 1}`}
               onChange={(e) => onColorChange(i, e.target.value)}
               className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
             />
@@ -87,7 +88,8 @@ const ColorControls: React.FC<ColorControlsProps> = ({
             key={idx}
             onClick={() => applyPalette(palette)}
             className="h-8 rounded-lg overflow-hidden border border-white/5 hover:border-white/20 transition-colors flex w-full"
-            title={`Apply Palette \${idx + 1}`}
+            title={`Apply Palette ${idx + 1}`}
+            aria-label={`Apply preset palette ${idx + 1}`}
           >
             {palette.map((c, i) => (
               <div
@@ -104,6 +106,7 @@ const ColorControls: React.FC<ColorControlsProps> = ({
       <div className="pt-2">
         <button
           onClick={() => setShowChannels(!showChannels)}
+          aria-expanded={showChannels}
           className="w-full flex items-center justify-between text-xs font-medium text-gray-400 hover:text-white transition-colors bg-white/5 p-2 rounded-lg"
         >
           <span>RGB Channels</span>
@@ -125,7 +128,10 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                   </div>
                   {/* R */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] w-3 font-bold text-red-500">
+                    <span
+                      className="text-[10px] w-3 font-bold text-red-500"
+                      id={`label-r-${i}`}
+                    >
                       R
                     </span>
                     <input
@@ -134,6 +140,7 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                       max="1"
                       step="0.01"
                       value={r}
+                      aria-labelledby={`label-r-${i}`}
                       onChange={(e) =>
                         handleChannelChange(i, 0, parseFloat(e.target.value))
                       }
@@ -145,7 +152,10 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                   </div>
                   {/* G */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] w-3 font-bold text-green-500">
+                    <span
+                      className="text-[10px] w-3 font-bold text-green-500"
+                      id={`label-g-${i}`}
+                    >
                       G
                     </span>
                     <input
@@ -154,6 +164,7 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                       max="1"
                       step="0.01"
                       value={g}
+                      aria-labelledby={`label-g-${i}`}
                       onChange={(e) =>
                         handleChannelChange(i, 1, parseFloat(e.target.value))
                       }
@@ -165,7 +176,10 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                   </div>
                   {/* B */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] w-3 font-bold text-blue-500">
+                    <span
+                      className="text-[10px] w-3 font-bold text-blue-500"
+                      id={`label-b-${i}`}
+                    >
                       B
                     </span>
                     <input
@@ -174,6 +188,7 @@ const ColorControls: React.FC<ColorControlsProps> = ({
                       max="1"
                       step="0.01"
                       value={b}
+                      aria-labelledby={`label-b-${i}`}
                       onChange={(e) =>
                         handleChannelChange(i, 2, parseFloat(e.target.value))
                       }
