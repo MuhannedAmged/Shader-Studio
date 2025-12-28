@@ -142,6 +142,14 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
     }
   }, [manualTime]);
 
+  // Optimize: Update fragment shader without recreating material
+  useEffect(() => {
+    if (materialRef.current) {
+      materialRef.current.fragmentShader = config.fragmentShader;
+      materialRef.current.needsUpdate = true;
+    }
+  }, [config.fragmentShader]);
+
   useFrame((state, delta) => {
     if (materialRef.current) {
       if (manualTime === undefined) {
@@ -159,7 +167,6 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
     <Mesh ref={meshRef} scale={[20, 20, 1]}>
       <PlaneGeometry args={[2, 2]} />
       <ShaderMaterial
-        key={config.fragmentShader}
         ref={materialRef}
         vertexShader={DEFAULT_VERTEX_SHADER}
         fragmentShader={config.fragmentShader}
@@ -512,12 +519,14 @@ const SceneContent: React.FC<ShaderCanvasProps> = (props) => {
         />
       )}
 
-      <FogLayer
-        config={props.config}
-        isPaused={props.isPaused}
-        resetTimeSignal={props.resetTimeSignal}
-        manualTime={props.manualTime}
-      />
+      {props.config.glow > 0 && (
+        <FogLayer
+          config={props.config}
+          isPaused={props.isPaused}
+          resetTimeSignal={props.resetTimeSignal}
+          manualTime={props.manualTime}
+        />
+      )}
 
       {props.config.showParticles && (
         <ParticleSystem

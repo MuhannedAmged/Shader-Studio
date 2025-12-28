@@ -3,8 +3,6 @@ import { Settings } from "lucide-react";
 import { ShaderConfig, GradientType } from "../types";
 import { getFragmentShader } from "../utils/shaderLoader";
 import { hexToRgb } from "../utils/shaderUtils";
-import { exportToGIF } from "../services/gifService";
-import { exportToVideo } from "../services/videoService";
 
 // Sub-components
 import Header from "./ControlsSub/Header";
@@ -116,6 +114,7 @@ const Controls: React.FC<ControlsProps> = ({
     setExportProgress(0);
 
     try {
+      const { exportToGIF } = await import("../services/gifService");
       const blob = await exportToGIF(canvasRef, {
         width: gifWidth,
         height: gifHeight,
@@ -161,6 +160,7 @@ const Controls: React.FC<ControlsProps> = ({
     setExportProgress(0);
 
     try {
+      const { exportToVideo } = await import("../services/videoService");
       const blob = await exportToVideo(canvasRef, {
         width: gifWidth,
         height: gifHeight,

@@ -1,7 +1,4 @@
 import React, { useState, useCallback, useEffect } from "react";
-import ShaderCanvas from "./components/ShaderCanvas";
-import Controls from "./components/Controls";
-import CodeEditor from "./components/CodeModal";
 import {
   ShaderConfig,
   GeneratorStatus,
@@ -9,6 +6,10 @@ import {
   ParticleType,
 } from "./types";
 import { useHistoryState } from "./hooks/useHistoryState";
+
+const ShaderCanvas = React.lazy(() => import("./components/ShaderCanvas"));
+const Controls = React.lazy(() => import("./components/Controls"));
+const CodeEditor = React.lazy(() => import("./components/CodeModal"));
 
 const DEFAULT_CONFIG: ShaderConfig = {
   fragmentShader: "",
@@ -122,44 +123,45 @@ const App: React.FC = () => {
       fragmentShader: newCode,
     }));
   };
-
   return (
     <main className="relative w-full h-screen overflow-hidden bg-black text-white font-sans selection:bg-indigo-500/30">
       {/* Background Shader */}
-      <ShaderCanvas
-        config={config}
-        isPaused={isPaused}
-        resetTimeSignal={resetTimeSignal}
-        manualTime={manualTime}
-        onCanvasReady={setCanvasRef}
-      />
+      <React.Suspense fallback={<div className="w-full h-full bg-black" />}>
+        <ShaderCanvas
+          config={config}
+          isPaused={isPaused}
+          resetTimeSignal={resetTimeSignal}
+          manualTime={manualTime}
+          onCanvasReady={setCanvasRef}
+        />
+      </React.Suspense>
 
       {/* Main UI Components */}
-      <Controls
-        config={config}
-        onChange={setConfig}
-        onReset={handleReset}
-        onExport={() => setShowEditor(true)}
-        isPaused={isPaused}
-        togglePause={() => setIsPaused((prev) => !prev)}
-        onResetTime={() => setResetTimeSignal((prev) => prev + 1)}
-        undo={undo}
-        redo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        canvasRef={canvasRef}
-        onManualTimeChange={setManualTime}
-      />
+      <React.Suspense fallback={null}>
+        <Controls
+          config={config}
+          onChange={setConfig}
+          onReset={handleReset}
+          onExport={() => setShowEditor(true)}
+          isPaused={isPaused}
+          togglePause={() => setIsPaused((prev) => !prev)}
+          onResetTime={() => setResetTimeSignal((prev) => prev + 1)}
+          undo={undo}
+          redo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+          canvasRef={canvasRef}
+          onManualTimeChange={setManualTime}
+        />
 
-      {/* <AIPanel onGenerate={handleGenerate} status={status} /> */}
-
-      <CodeEditor
-        isOpen={showEditor}
-        onClose={() => setShowEditor(false)}
-        code={config.fragmentShader}
-        onChange={handleCodeChange}
-        config={config}
-      />
+        <CodeEditor
+          isOpen={showEditor}
+          onClose={() => setShowEditor(false)}
+          code={config.fragmentShader}
+          onChange={handleCodeChange}
+          config={config}
+        />
+      </React.Suspense>
 
       {/* Overlay Status Toast */}
       {status === GeneratorStatus.SUCCESS && (
