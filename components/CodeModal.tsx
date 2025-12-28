@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Prism from "prismjs";
 import { motion, AnimatePresence } from "framer-motion";
+const MotionDiv = motion.div as any;
 import { ShaderConfig } from "../types";
 import { generateStandaloneShader } from "../utils/shaderUtils";
 
@@ -136,6 +137,7 @@ const ALL_SUGGESTIONS = [...APP_UNIFORMS, ...GLSL_KEYWORDS];
 interface CodeEditorProps {
   isOpen: boolean;
   onClose: () => void;
+  code: string;
   onChange: (newCode: string) => void;
   config: ShaderConfig;
 }
@@ -363,7 +365,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -373,7 +375,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
           />
 
           {/* Drawer */}
-          <motion.div
+          <MotionDiv
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
@@ -381,79 +383,91 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             className="fixed top-0 right-0 h-full w-full md:w-[650px] z-[70] flex flex-col bg-[#0a0a0a]/95 border-l border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent">
-              <div className="flex flex-col">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2.5 tracking-tight">
-                  <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
-                    <Terminal className="w-4 h-4 text-indigo-400" />
-                  </div>
-                  Shader Studio
-                </h3>
-                <p className="text-[10px] text-gray-500 mt-1 ml-9 font-medium uppercase tracking-widest">
-                  GLSL Editor • v1.5.0
-                </p>
-              </div>
+            <div className="px-6 py-5 pb-2 border-b border-white/5 bg-gradient-to-r from-white/[0.02] to-transparent">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2.5 tracking-tight">
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                      <Terminal className="w-4 h-4 text-indigo-400" />
+                    </div>
+                    Shader Studio
+                  </h3>
+                  <p className="text-[10px] text-gray-500 mt-1 ml-9 font-medium uppercase tracking-widest">
+                    GLSL Editor • v1.5.0
+                  </p>
+                </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg transition-all text-xs font-medium text-gray-300 hover:text-white group"
-                  title="Copy Code"
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-green-400" />
-                      <span className="text-green-400">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 rounded-lg transition-all text-xs font-medium text-gray-300 hover:text-white group"
+                    title="Copy Code"
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400">Copied</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
 
-                <div className="w-px h-6 bg-white/10 mx-1" />
+                  <div className="w-px h-6 bg-white/10 mx-1" />
 
-                <button
-                  onClick={() => setShowShadertoy(!showShadertoy)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-medium border ${
-                    showShadertoy
-                      ? "bg-indigo-500/20 border-indigo-500 text-indigo-200"
-                      : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
-                  }`}
-                  title="Toggle Shadertoy Compatibility"
-                >
-                  <Sparkles
-                    className={`w-3.5 h-3.5 ${
-                      showShadertoy ? "animate-pulse" : ""
+                  <button
+                    onClick={() => setShowShadertoy(!showShadertoy)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all text-xs font-medium border ${
+                      showShadertoy
+                        ? "bg-indigo-500/20 border-indigo-500 text-indigo-200"
+                        : "bg-white/5 border-white/5 text-gray-400 hover:text-white hover:bg-white/10"
                     }`}
-                  />
-                  <span>
-                    {showShadertoy ? "Shadertoy Mode" : "Generic GLSL"}
-                  </span>
-                </button>
+                    title="Toggle Shadertoy Compatibility"
+                  >
+                    <Sparkles
+                      className={`w-3.5 h-3.5 ${
+                        showShadertoy ? "animate-pulse" : ""
+                      }`}
+                    />
+                    <span>
+                      {showShadertoy ? "Shadertoy Mode" : "Generic GLSL"}
+                    </span>
+                  </button>
 
-                <div className="w-px h-6 bg-white/10 mx-1" />
+                  <div className="w-px h-6 bg-white/10 mx-1" />
 
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all text-gray-400"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all text-gray-400"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
+
+              <AnimatePresence>
+                {showShadertoy && (
+                  <MotionDiv
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-2"
+                  >
+                    <div className="w-fit mx-auto px-6 py-2 bg-indigo-500/5 border rounded-xl border-indigo-500/10">
+                      <p className="text-[10px] text-indigo-300 font-medium">
+                        <Sparkles className="w-3 h-3 inline-block mr-1 mb-0.5" />
+                        Shadertoy compatibility mode enabled. Uniforms are
+                        mapped to iTime, iResolution, etc.
+                      </p>
+                    </div>
+                  </MotionDiv>
+                )}
+              </AnimatePresence>
             </div>
-
-            {showShadertoy && (
-              <div className="px-6 py-2 bg-indigo-500/5 border-b border-indigo-500/10 animate-slide-down">
-                <p className="text-[10px] text-indigo-300 font-medium">
-                  <Sparkles className="w-3 h-3 inline-block mr-1 mb-0.5" />
-                  Shadertoy compatibility mode enabled. Uniforms are mapped to
-                  iTime, iResolution, etc.
-                </p>
-              </div>
-            )}
 
             {/* Editor Area */}
             <div
@@ -528,7 +542,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
               {/* Autocomplete Popup */}
               <AnimatePresence>
                 {suggestions.length > 0 && (
-                  <motion.div
+                  <MotionDiv
                     initial={{ opacity: 0, y: 5, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
@@ -581,7 +595,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                         )}
                       </button>
                     ))}
-                  </motion.div>
+                  </MotionDiv>
                 )}
               </AnimatePresence>
             </div>
@@ -628,7 +642,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         </>
       )}
     </AnimatePresence>

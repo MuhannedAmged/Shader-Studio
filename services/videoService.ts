@@ -42,52 +42,33 @@ export const exportToVideo = async (
 
     mediaRecorder.start();
 
-    // Precise frame calculation for perfect loops
-    const totalTargetFrames = Math.ceil(duration * fps);
-
-    // For pingpong, we record the forward part.
-    // Note: True pingpong in video is hard because we can't just reverse frames easily like in GIF without re-encoding.
-    // However, we can simulate it by recording the forward AND backward motion in real-time.
-    // Unlike GIF where we just copied frames, here we must render them.
-
+    const totalTargetFrames = Math.round(duration * fps);
     const isPingPong = loopType === "pingpong";
-    const framesToRecord = isPingPong
-      ? totalTargetFrames * 2 - 2
+
+    // For ping-pong, we record exactly totalTargetFrames
+    const framesToRecord = totalTargetFrames;
+    const forwardFrames = isPingPong
+      ? Math.ceil(totalTargetFrames / 2) + 1
       : totalTargetFrames;
-    const effectiveDuration = duration; // Duration of one forward pass
+    const frameInterval = 1000 / fps;
 
     try {
+      let startTime = performance.now();
+
       for (let i = 0; i < framesToRecord; i++) {
         let time;
 
         if (isPingPong) {
-          // Calculate ping-pong time
-          // 0 -> duration -> 0
-          const phase = i / (framesToRecord - 1); // 0 to 1
-          // Map 0..1 to 0..1..0 triangle wave
-          // If we want exactly duration seconds one way:
-          // The total sequence is roughly 2 * duration
-
-          // Let's stick to the logic:
-          // We want the visual state to go A -> B -> A
-          // Total frames: N (forward) + N-2 (backward)
-
-          const forwardFrames = totalTargetFrames;
-
+          const peakTime = duration / 2;
           if (i < forwardFrames) {
-            // Forward
-            time = (i / (forwardFrames - 1)) * effectiveDuration;
+            time = (i / (forwardFrames - 1)) * peakTime;
           } else {
-            // Backward
-            const backwardIndex = i - forwardFrames;
-            // We want to go from frame N-2 down to 1
-            // i goes from N to 2N-3
-            const t = (backwardIndex + 1) / (forwardFrames - 1); // 0 to almost 1
-            time = effectiveDuration * (1 - t);
+            const backwardIndex = i - (forwardFrames - 1);
+            const t = backwardIndex / (framesToRecord - forwardFrames + 1);
+            time = peakTime * (1 - t);
           }
         } else {
-          // Normal loop: 0 -> duration
-          time = (i / totalTargetFrames) * effectiveDuration;
+          time = (i / totalTargetFrames) * duration;
         }
 
         if (onFrame) {
@@ -100,9 +81,15 @@ export const exportToVideo = async (
           track.requestFrame();
         }
 
-        // Wait a tiny bit for the canvas to be painted and captured
-        // In a perfect world requestFrame handles this, but a small delay ensures stability
-        await new Promise((r) => setTimeout(r, 1000 / fps));
+        // Precise wait for MediaRecorder duration.
+        // MediaRecorder records real-world time, so we MUST wait real-world time.
+        const targetWaitTime = (i + 1) * frameInterval;
+        const elapsed = performance.now() - startTime;
+        const remaining = targetWaitTime - elapsed;
+
+        if (remaining > 0) {
+          await new Promise((r) => setTimeout(r, remaining));
+        }
 
         if (onProgress) {
           onProgress(i / framesToRecord);

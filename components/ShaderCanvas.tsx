@@ -2,14 +2,16 @@ import React, { useRef, useMemo, useEffect } from "react";
 import { Canvas, useFrame, createPortal, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ShaderConfig } from "../types";
+import { DEFAULT_VERTEX_SHADER } from "../utils/shaders/otherShaders";
 import {
-  DEFAULT_VERTEX_SHADER,
   PARTICLE_VERTEX_SHADER,
   PARTICLE_FRAGMENT_SHADER,
+} from "../utils/shaders/particleShaders";
+import {
   BLUR_FRAGMENT_SHADER,
   FOG_FRAGMENT_SHADER,
-  hexToRgb,
-} from "../utils/shaderUtils";
+} from "../utils/shaders/otherShaders";
+import { hexToRgb } from "../utils/shaderUtils";
 import { ParticleType } from "../types";
 
 // Bypass TypeScript intrinsic element checks for R3F primitives by aliasing them
@@ -133,15 +135,22 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
     }
   }, [config]);
 
+  // Ensure manualTime is synced even if useFrame isn't running
+  useEffect(() => {
+    if (manualTime !== undefined && materialRef.current) {
+      materialRef.current.uniforms.uTime.value = manualTime;
+    }
+  }, [manualTime]);
+
   useFrame((state, delta) => {
     if (materialRef.current) {
-      if (manualTime !== undefined) {
-        materialRef.current.uniforms.uTime.value = manualTime;
-      } else {
+      if (manualTime === undefined) {
         if (!isPaused) {
           timeRef.current += delta;
         }
         materialRef.current.uniforms.uTime.value = timeRef.current;
+      } else {
+        materialRef.current.uniforms.uTime.value = manualTime;
       }
     }
   });
@@ -163,18 +172,31 @@ const ShaderMesh: React.FC<ShaderMeshProps> = ({
 // Component to handle background rendering to FBO
 const BackgroundRenderer: React.FC<
   ShaderMeshProps & { target: THREE.WebGLRenderTarget }
-> = ({ config, isPaused, resetTimeSignal, target }) => {
+> = ({ config, isPaused, resetTimeSignal, target, manualTime }) => {
   const scene = useMemo(() => new THREE.Scene(), []);
   const camera = useMemo(
     () => new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1),
     []
   );
 
+  const { gl } = useThree();
+
+  // Manual render trigger for background renderer
+  useEffect(() => {
+    if (manualTime !== undefined) {
+      gl.setRenderTarget(target);
+      gl.render(scene, camera);
+      gl.setRenderTarget(null);
+    }
+  }, [manualTime, gl, scene, camera, target]);
+
   // Render the separate scene to the target
   useFrame(({ gl }) => {
-    gl.setRenderTarget(target);
-    gl.render(scene, camera);
-    gl.setRenderTarget(null);
+    if (manualTime === undefined) {
+      gl.setRenderTarget(target);
+      gl.render(scene, camera);
+      gl.setRenderTarget(null);
+    }
   });
 
   return createPortal(
@@ -182,6 +204,7 @@ const BackgroundRenderer: React.FC<
       config={config}
       isPaused={isPaused}
       resetTimeSignal={resetTimeSignal}
+      manualTime={manualTime}
     />,
     scene
   );
@@ -431,7 +454,7 @@ interface ShaderCanvasProps {
 }
 
 const SceneContent: React.FC<ShaderCanvasProps> = (props) => {
-  const { size, gl } = useThree();
+  const { size, gl, scene, camera } = useThree();
   const hasBlur = props.config.blurStrength > 0;
 
   // Create render target for background only if needed
@@ -455,6 +478,13 @@ const SceneContent: React.FC<ShaderCanvasProps> = (props) => {
   useEffect(() => {
     return () => target.dispose();
   }, [target]);
+
+  // Manual render trigger for main scene
+  useEffect(() => {
+    if (props.manualTime !== undefined) {
+      gl.render(scene, camera);
+    }
+  }, [props.manualTime, gl, scene, camera]);
 
   // Notify parent when canvas is ready
   useEffect(() => {

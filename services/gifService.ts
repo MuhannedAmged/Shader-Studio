@@ -28,7 +28,7 @@ export const exportToGIF = async (
   const frameDelay = 1000 / fps;
 
   // Precise frame calculation for perfect loops
-  const totalTargetFrames = Math.ceil(duration * fps);
+  const totalTargetFrames = Math.round(duration * fps);
   const totalCaptureFrames =
     loopType === "pingpong"
       ? Math.ceil(totalTargetFrames / 2) + 1
@@ -39,7 +39,7 @@ export const exportToGIF = async (
     loopType === "pingpong" ? (totalCaptureFrames - 1) / fps : duration;
 
   const gif = new GIF({
-    workers: 4,
+    workers: navigator.hardwareConcurrency || 4,
     quality: quality,
     width: width,
     height: height,
@@ -48,7 +48,7 @@ export const exportToGIF = async (
   });
 
   if (onProgress) {
-    gif.on("progress", (p: number) => onProgress(p));
+    gif.on("progress", (p: number) => onProgress(0.5 + p * 0.5));
   }
 
   const tempCanvas = document.createElement("canvas");
@@ -60,6 +60,14 @@ export const exportToGIF = async (
 
   return new Promise(async (resolve, reject) => {
     const capturedFrames: ImageData[] = [];
+    const totalOutputFrames =
+      loopType === "pingpong"
+        ? totalCaptureFrames + (totalCaptureFrames - 2)
+        : totalCaptureFrames;
+
+    // Total duration in ms
+    const totalDurationMs = duration * 1000;
+    let accumulatedDelay = 0;
 
     try {
       // Phase 1: Capture frames
@@ -81,11 +89,16 @@ export const exportToGIF = async (
           capturedFrames.push(imageData);
         }
 
-        gif.addFrame(imageData, { delay: frameDelay });
+        // Calculate individual frame delay with error correction (jitter)
+        // This ensures the sum of all delays equals totalDurationMs
+        const targetEnd = ((i + 1) / totalOutputFrames) * totalDurationMs;
+        const currentDelay = Math.round(targetEnd - accumulatedDelay);
+        accumulatedDelay += currentDelay;
+
+        gif.addFrame(imageData, { delay: currentDelay });
 
         if (onProgress) {
-          // Progress for capture phase (0 to 0.5)
-          onProgress((i / totalCaptureFrames) * 0.5);
+          onProgress((i / totalOutputFrames) * 0.5);
         }
       }
 
@@ -93,7 +106,18 @@ export const exportToGIF = async (
       if (loopType === "pingpong" && capturedFrames.length > 2) {
         // We exclude the first and last frames to avoid duplicates at the loop points
         for (let i = capturedFrames.length - 2; i > 0; i--) {
-          gif.addFrame(capturedFrames[i], { delay: frameDelay });
+          const frameIndex =
+            totalCaptureFrames + (capturedFrames.length - 2 - i);
+          const targetEnd =
+            ((frameIndex + 1) / totalOutputFrames) * totalDurationMs;
+          const currentDelay = Math.round(targetEnd - accumulatedDelay);
+          accumulatedDelay += currentDelay;
+
+          gif.addFrame(capturedFrames[i], { delay: currentDelay });
+
+          if (onProgress) {
+            onProgress((frameIndex / totalOutputFrames) * 0.5);
+          }
         }
       }
 

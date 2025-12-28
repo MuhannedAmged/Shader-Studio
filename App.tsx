@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import ShaderCanvas from "./components/ShaderCanvas";
 import Controls from "./components/Controls";
-import AIPanel from "./components/AIPanel";
 import CodeEditor from "./components/CodeModal";
 import {
   ShaderConfig,
@@ -9,12 +8,10 @@ import {
   GradientType,
   ParticleType,
 } from "./types";
-import { DEFAULT_FRAGMENT_SHADER } from "./utils/shaderUtils";
-import { generateShaderCode } from "./services/geminiService";
 import { useHistoryState } from "./hooks/useHistoryState";
 
 const DEFAULT_CONFIG: ShaderConfig = {
-  fragmentShader: DEFAULT_FRAGMENT_SHADER,
+  fragmentShader: "",
   colors: ["#4f46e5", "#9333ea", "#db2777"], // Indigo, Purple, Pink
   speed: 0.2,
   density: 1.5,
@@ -101,30 +98,20 @@ const App: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [undo, redo]);
 
-  const handleGenerate = useCallback(
-    async (prompt: string) => {
-      setStatus(GeneratorStatus.GENERATING);
-      try {
-        const result = await generateShaderCode(prompt);
-        setConfig((prev) => ({
-          ...prev,
-          fragmentShader: result.fragmentShader,
-        }));
-        setStatus(GeneratorStatus.SUCCESS);
-      } catch (e) {
-        console.error(e);
-        setStatus(GeneratorStatus.ERROR);
-      } finally {
-        // Reset status after a delay so the user sees the result state
-        setTimeout(() => setStatus(GeneratorStatus.IDLE), 3000);
-      }
-    },
-    [setConfig]
-  );
+  // We map original app variable names to Shadertoy built-ins
+  useEffect(() => {
+    const loadInitialShader = async () => {
+      const { getFragmentShader } = await import("./utils/shaderLoader");
+      const shader = await getFragmentShader(DEFAULT_CONFIG.gradientType);
+      setConfig((prev) => ({ ...prev, fragmentShader: shader }));
+    };
+    loadInitialShader();
+  }, []);
 
-  const handleReset = () => {
-    // We use setConfig here instead of resetConfig to treat "Reset" as an undoable action
-    setConfig(DEFAULT_CONFIG);
+  const handleReset = async () => {
+    const { getFragmentShader } = await import("./utils/shaderLoader");
+    const shader = await getFragmentShader(DEFAULT_CONFIG.gradientType);
+    setConfig({ ...DEFAULT_CONFIG, fragmentShader: shader });
     setIsPaused(false);
     setResetTimeSignal((prev) => prev + 1);
   };
